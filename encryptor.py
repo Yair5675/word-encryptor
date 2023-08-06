@@ -54,6 +54,14 @@ class Encryptor:
             # If not, add the data:
             self.__data += data
 
+    def encrypt_data(self):
+        """
+        Encrypts the data that was loaded to the Encryptor instance. Pay attention that the function does not return the
+        encrypted data, but only performs the encryption. If the data in the encryptor is already encrypted, or no data was
+        loaded at all, the function will raise an appropriate error.
+        """
+        pass
+
     @staticmethod
     def __derive_key(password: str, salt: bytes) -> bytes:
         """
