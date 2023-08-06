@@ -5,13 +5,16 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 
 class Encryptor:
-    __slots__ = ['__key', '__salt']
+    __slots__ = ['__key', '__salt', '__data', '__is_encrypted']
 
     def __init__(self, password: str, salt_size: int):
         # Generate random salt bytes for the encryption:
         self.__salt = os.urandom(salt_size)
         # Derive key:
         self.__key = Encryptor.__derive_key(password, self.__salt)
+        # Initializing the saved data and the 'is_encrypted' attribute:
+        self.__data = ''
+        self.__is_encrypted = False
 
     @staticmethod
     def __derive_key(password: str, salt: bytes) -> bytes:
