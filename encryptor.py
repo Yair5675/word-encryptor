@@ -12,6 +12,14 @@ class DataAlreadyEncryptedException(Exception):
         super().__init__('Attempt to add new data to already encrypted data')
 
 
+class DataNotLoadedException(Exception):
+    """
+    An exception for cases where the encryptor is attempting to encrypt data, but none is loaded.
+    """
+    def __init__(self):
+        super().__init__('Cannot encrypt data that was not yet loaded')
+
+
 class Encryptor:
     __slots__ = ['__key', '__salt', '__data', '__is_encrypted']
 
