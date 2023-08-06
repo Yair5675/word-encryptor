@@ -22,7 +22,18 @@ class DataNotLoadedException(Exception):
 
 
 class Encryptor:
-    __slots__ = ['__key', '__salt', '__data', '__is_encrypted']
+    """
+    A class that is used to encrypt data using a password-based key and various encryption methods.
+    """
+    __slots__ = [
+        '__key',  # The key which will primarily decide how the data will be encrypted. It is based on the password given
+                  # inside the constructor.
+        '__salt',  # A random collection of bytes to improve the security of the encryption. The number of random bytes will
+                   # be given as a parameter for the constructor.
+        '__data',  # The data that was encrypted or is about to be encrypted by the Encryptor instance.
+        '__is_encrypted'  # A boolean value which is True if the data held by the Encryptor instance is encrypted, and False
+                          # otherwise.
+        ]
 
     def __init__(self, password: str, salt_size: int):
         # Ensuring type safety for the password:
