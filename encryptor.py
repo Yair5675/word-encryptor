@@ -60,6 +60,15 @@ class Encryptor:
         """
         return len(self.__data) == 0
 
+    def is_encrypted(self) -> bool:
+        """
+        Checks if the data saved inside the Encryptor instance is already encrypted.
+        :return: True if the data saved in the Encryptor instance is already encrypted, False otherwise. If no data is
+                 present in the instance, False will be returned.
+         :rtype: bool
+        """
+        return self.__is_encrypted
+
     def clear_data(self):
         """
         Clears the text saved in the instance.
