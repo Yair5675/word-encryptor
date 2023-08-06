@@ -1,7 +1,8 @@
 import os
-from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import hashes, padding
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 
 class DataAlreadyEncryptedException(Exception):
@@ -67,8 +68,38 @@ class Encryptor:
         Encrypts the data that was loaded to the Encryptor instance. Pay attention that the function does not return the
         encrypted data, but only performs the encryption. If the data in the encryptor is already encrypted, or no data was
         loaded at all, the function will raise an appropriate error.
+        :raises DataAlreadyEncryptedException: If the current data in the Encryptor instance was already encrypted.
+        :raises DataNotLoadedException: If no data was given to the Encryptor instance prior to the function's call, or if it
+                                        was cleared.
         """
-        pass
+        # Checking if the data was already encrypted:
+        if self.__is_encrypted:
+            raise DataAlreadyEncryptedException()
+        # Checking if there is any data to encrypt:
+        elif len(self.__data) == 0:
+            raise DataNotLoadedException()
+
+        # Padding the data to match the block size of the AES algorithm:
+        padder = padding.PKCS7(algorithms.AES.block_size).padder()
+        padded_data = padder.update(self.__data) + padder.finalize()
+
+        # Generate a random IV (Initialization Vector) for the encryption:
+        iv = os.urandom(16)
+
+        # Create a Cipher object using AES in CFB mode with the key and IV:
+        cipher = Cipher(algorithms.AES(self.__key), modes.CFB(iv), backend=default_backend())
+
+        # Get an encryptor to perform the encryption:
+        encryptor = cipher.encryptor()
+
+        # Perform the encryption on the padded data:
+        cipher_data = encryptor.update(padded_data) + encryptor.finalize()
+
+        # Save the encrypted data as a concatenation of salt, IV and cipher_data:
+        self.__data = self.__salt + iv + cipher_data
+
+        # Change 'is_encrypted' to true:
+        self.__is_encrypted = True
 
     @staticmethod
     def __derive_key(password: str, salt: bytes) -> bytes:
