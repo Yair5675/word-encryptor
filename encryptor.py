@@ -4,6 +4,14 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 
+class DataAlreadyEncryptedException(Exception):
+    """
+    An exception for cases where new data is being added to the encryptor's data, after the old data was encrypted.
+    """
+    def __init__(self):
+        super().__init__('Attempt to add new data to already encrypted data')
+
+
 class Encryptor:
     __slots__ = ['__key', '__salt', '__data', '__is_encrypted']
 
@@ -27,6 +35,8 @@ class Encryptor:
         Enters new data to the encryptor. If the data stored in the encryptor is already encrypted, an error will be raised.
         :param data: A new string of data that will be saved in the instance and be encrypted in the future using the
                      'encrypt' function.
+        :raises DataAlreadyEncryptedException: If the current Encryptor instance has not cleared its data since it was last
+                                               encrypted.
         """
         pass
 
