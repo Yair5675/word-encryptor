@@ -16,6 +16,15 @@ class Encryptor:
     __slots__ = ['__key', '__salt', '__data', '__is_encrypted']
 
     def __init__(self, password: str, salt_size: int):
+        # Ensuring type safety for the password:
+        if type(password) != str:
+            raise TypeError(f'Expected a password of type str, got {type(password)} instead')
+        # Ensuring the salt size is a valid UNSIGNED integer:
+        if type(salt_size) != int:
+            raise TypeError(f'Expected an unsigned integer as salt size, got {type(salt_size)} instead')
+        elif salt_size <= 0:
+            raise ValueError(f'Invalid value for salt size: {salt_size} (should be above 0)')
+
         # Generate random salt bytes for the encryption:
         self.__salt = os.urandom(salt_size)
         # Derive key:
