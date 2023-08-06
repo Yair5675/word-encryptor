@@ -22,6 +22,14 @@ class Encryptor:
         self.__data = ''
         self.__is_encrypted = False
 
+    def enter_data(self, data: str):
+        """
+        Enters new data to the encryptor. If the data stored in the encryptor is already encrypted, an error will be raised.
+        :param data: A new string of data that will be saved in the instance and be encrypted in the future using the
+                     'encrypt' function.
+        """
+        pass
+
     @staticmethod
     def __derive_key(password: str, salt: bytes) -> bytes:
         """
