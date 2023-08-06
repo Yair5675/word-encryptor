@@ -13,6 +13,12 @@ class Encryptor:
         # Derive key:
         self.__key = Encryptor.__derive_key(password, self.__salt)
         # Initializing the saved data and the 'is_encrypted' attribute:
+        self.clear_data()
+
+    def clear_data(self):
+        """
+        Clears the text saved in the instance.
+        """
         self.__data = ''
         self.__is_encrypted = False
 
