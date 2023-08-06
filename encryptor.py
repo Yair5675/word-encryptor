@@ -52,6 +52,14 @@ class Encryptor:
         # Initializing the saved data and the 'is_encrypted' attribute:
         self.clear_data()
 
+    def is_empty(self) -> bool:
+        """
+        Checks if there is any data saved inside the Encryptor instance.
+        :return: True if no data is saved inside the Encryptor instance, False otherwise.
+        :rtype: bool
+        """
+        return len(self.__data) == 0
+
     def clear_data(self):
         """
         Clears the text saved in the instance.
