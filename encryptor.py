@@ -1,4 +1,7 @@
 import os
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 
 class Encryptor:
@@ -21,4 +24,13 @@ class Encryptor:
         :return: The encryption key that was generated with the password and salt parameters.
         :rtype: bytes
         """
-        pass
+        # Create a key derivation function (PBKDF2) with SHA-256 as the hash function:
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,  # 256-bit key length
+            salt=salt,
+            iterations=100000,  # Number of iterations (higher is more secure but slower)
+            backend=default_backend()
+        )
+        # Derive the encryption key from the provided password and salt
+        return kdf.derive(password.encode('utf-8'))
