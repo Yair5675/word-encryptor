@@ -38,7 +38,12 @@ class Encryptor:
         :raises DataAlreadyEncryptedException: If the current Encryptor instance has not cleared its data since it was last
                                                encrypted.
         """
-        pass
+        # Checking if the data was already encrypted:
+        if self.__is_encrypted:
+            raise DataAlreadyEncryptedException()
+        else:
+            # If not, add the data:
+            self.__data += data
 
     @staticmethod
     def __derive_key(password: str, salt: bytes) -> bytes:
