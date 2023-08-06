@@ -9,7 +9,7 @@ class DataAlreadyEncryptedException(Exception):
     An exception for cases where new data is being added to the encryptor's data, after the old data was encrypted.
     """
     def __init__(self):
-        super().__init__('Attempt to add new data to already encrypted data')
+        super().__init__('Cannot add new data to already encrypted data')
 
 
 class DataNotLoadedException(Exception):
