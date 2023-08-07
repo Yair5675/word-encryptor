@@ -184,7 +184,19 @@ class Encryptor:
         :raises InvalidEncryptedFileExtensionException: If the file to which the data will be written to doesn't end with the
                                                         '.bin' file extension.
         """
-        pass
+        # Checking there is data to write to a file:
+        if self.is_empty():
+            raise DataNotLoadedException('Cannot save encrypted data to file because data was cleared or not loaded at all')
+        # Checking if the data wasn't encrypted:
+        elif not self.__is_encrypted:
+            raise DataNotEncryptedException('Data must be encrypted before being saved to a file')
+        # Checking that the file path ends with the '.bin' extension:
+        elif not file_path.endswith('.bin'):
+            raise InvalidEncryptedFileExtensionException("Can only save encrypted data to files ending with '.bin'")
+
+        # Saving the data to the specified file:
+        with open(file_path, 'wb') as file:
+            file.write(self.__data)
 
     @staticmethod
     def __derive_key(password: str, salt: bytes) -> bytes:
