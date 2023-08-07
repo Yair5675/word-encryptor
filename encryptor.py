@@ -28,10 +28,19 @@ class DataNotLoadedException(Exception):
 
 class DataNotEncryptedException(Exception):
     """
-    An exception for cases where the encryptor is attempting to perform an action that requires the data to be encrypted,
+    An exception for cases where the Encryptor is attempting to perform an action that requires the data to be encrypted,
     while the data is not encrypted.
     """
     def __init__(self, message='Attempting to perform an action that requires the data to be encrypted'):
+        super().__init__(message)
+
+
+class InvalidEncryptedFileExtensionException(Exception):
+    """
+    An exception for cases where the Encryptor is trying to save the encrypted data into a file with invalid extension or an
+    extension that differs from the guidelines of the Encryptor.
+    """
+    def __init__(self, message):
         super().__init__(message)
 
 
