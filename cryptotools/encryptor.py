@@ -64,6 +64,8 @@ class Encryptor:
         ]
 
     # Constants in the class:
+    MAX_SALT_SIZE = 32  # Maximum amount of bytes that will be dedicated to the salt (user can choose less)
+
     __KEY_LENGTH = 32  # The amount of bytes the key will be made of (multiply by 8 to get the amount of bits)
     __KEY_ITERATIONS = 100000  # Number of iteration to create the encryption key (higher is more secure but slower)
 
@@ -71,11 +73,12 @@ class Encryptor:
         # Ensuring type safety for the password:
         if type(password) != str:
             raise TypeError(f'Expected a password of type str, got {type(password)} instead')
-        # Ensuring the salt size is a valid UNSIGNED integer:
+        # Ensuring the salt size is a valid integer between 1 and the maximum amount of salt bytes:
         if type(salt_size) != int:
             raise TypeError(f'Expected an unsigned integer as salt size, got {type(salt_size)} instead')
-        elif salt_size <= 0:
-            raise ValueError(f'Invalid value for salt size: {salt_size} (should be above 0)')
+        elif salt_size <= 0 or salt_size > Encryptor.MAX_SALT_SIZE:
+            raise ValueError(f'Invalid value for salt size: {salt_size} (should be between 1 and {Encryptor.MAX_SALT_SIZE} '
+                             'inclusively)')
 
         # Generate random salt bytes for the encryption:
         self.__salt = os.urandom(salt_size)
