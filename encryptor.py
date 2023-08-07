@@ -117,12 +117,12 @@ class Encryptor:
         :raises DataNotLoadedException: If no data was given to the Encryptor instance prior to the function's call, or if it
                                         was cleared.
         """
-        # Checking if the data was already encrypted:
-        if self.__is_encrypted:
-            raise DataAlreadyEncryptedException()
         # Checking if there is any data to encrypt:
-        elif len(self.__data) == 0:
+        if self.is_empty():
             raise DataNotLoadedException()
+        # Checking if the data was already encrypted:
+        elif self.__is_encrypted:
+            raise DataAlreadyEncryptedException()
 
         # Padding the data to match the block size of the AES algorithm:
         padder = padding.PKCS7(algorithms.AES.block_size).padder()
