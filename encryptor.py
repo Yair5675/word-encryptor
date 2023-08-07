@@ -74,7 +74,7 @@ class Encryptor:
         # Generate random salt bytes for the encryption:
         self.__salt = os.urandom(salt_size)
         # Derive key:
-        self.__key = Encryptor.__derive_key(password, self.__salt)
+        self.__key = Encryptor.derive_key(password, self.__salt)
         # Initializing the saved data and the 'is_encrypted' attribute:
         self.clear_data()
 
@@ -200,7 +200,7 @@ class Encryptor:
             file.write(self.__data)
 
     @staticmethod
-    def __derive_key(password: str, salt: bytes) -> bytes:
+    def derive_key(password: str, salt: bytes) -> bytes:
         """
         Creates an encryption key based on the given password and salt parameters.
         :param password: A password chosen by the encryptor, will be used to determine the value of the encryption key.
