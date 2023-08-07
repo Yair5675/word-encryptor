@@ -8,7 +8,15 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 ############################################
 # Exceptions related to the Encryptor class:
 ############################################
-class DataAlreadyEncryptedException(Exception):
+class EncryptorException(Exception):
+    """
+    Base exception for all custom exceptions that arise from mishandling the Encryptor class.
+    """
+    def __init__(self, message):
+        super().__init__(message)
+
+
+class DataAlreadyEncryptedException(EncryptorException):
     """
     An exception for cases where the Encryptor is attempting to perform an action that requires the data to be non-encrypted,
     after it had been encrypted.
@@ -17,7 +25,7 @@ class DataAlreadyEncryptedException(Exception):
         super().__init__(message)
 
 
-class DataNotLoadedException(Exception):
+class DataNotLoadedException(EncryptorException):
     """
     An exception for cases where the Encryptor is attempting to use the data saved in it for various purposes, but no data
     was loaded to it in the first place.
@@ -26,7 +34,7 @@ class DataNotLoadedException(Exception):
         super().__init__(message)
 
 
-class DataNotEncryptedException(Exception):
+class DataNotEncryptedException(EncryptorException):
     """
     An exception for cases where the Encryptor is attempting to perform an action that requires the data to be encrypted,
     while the data is not encrypted.
@@ -35,7 +43,7 @@ class DataNotEncryptedException(Exception):
         super().__init__(message)
 
 
-class InvalidEncryptedFileExtensionException(Exception):
+class InvalidEncryptedFileExtensionException(EncryptorException):
     """
     An exception for cases where the Encryptor is trying to save the encrypted data into a file with invalid extension or an
     extension that differs from the guidelines of the Encryptor.
