@@ -10,18 +10,20 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 ############################################
 class DataAlreadyEncryptedException(Exception):
     """
-    An exception for cases where new data is being added to the encryptor's data, after the old data was encrypted.
+    An exception for cases where the Encryptor is attempting to perform an action that requires the data to be non-encrypted,
+    after it had been encrypted.
     """
-    def __init__(self):
-        super().__init__('Cannot add new data to already encrypted data')
+    def __init__(self, message='Attempting to perform an action that requires the data to be non-encrypted'):
+        super().__init__(message)
 
 
 class DataNotLoadedException(Exception):
     """
-    An exception for cases where the encryptor is attempting to encrypt data, but none is loaded.
+    An exception for cases where the Encryptor is attempting to use the data saved in it for various purposes, but no data
+    was loaded to it in the first place.
     """
-    def __init__(self):
-        super().__init__('Cannot encrypt data that was not yet loaded')
+    def __init__(self, message='Attempting to perform and action with data that was not yet loaded or was cleared'):
+        super().__init__(message)
 
 
 class DataNotEncryptedException(Exception):
@@ -85,7 +87,7 @@ class Encryptor:
         """
         # Checking there is any data to return:
         if self.is_empty():
-            raise DataNotLoadedException()
+            raise DataNotLoadedException('Cannot retrieve encrypted data which was cleared or not loaded at all')
         # Making sure the data is encrypted before we return it:
         if not self.__is_encrypted:
             self.encrypt_data()
@@ -118,7 +120,7 @@ class Encryptor:
         """
         # Checking if the data was already encrypted:
         if self.__is_encrypted:
-            raise DataAlreadyEncryptedException()
+            raise DataAlreadyEncryptedException('Cannot change the pure data in the Encryptor as it was already encrypted')
         else:
             # If not, add the data:
             self.__data += data
@@ -134,10 +136,10 @@ class Encryptor:
         """
         # Checking if there is any data to encrypt:
         if self.is_empty():
-            raise DataNotLoadedException()
+            raise DataNotLoadedException('Cannot encrypt data which was cleared or not loaded at all')
         # Checking if the data was already encrypted:
         elif self.__is_encrypted:
-            raise DataAlreadyEncryptedException()
+            raise DataAlreadyEncryptedException('Cannot re-encrypt data after it was encrypted')
 
         # Padding the data to match the block size of the AES algorithm:
         padder = padding.PKCS7(algorithms.AES.block_size).padder()
