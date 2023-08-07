@@ -5,6 +5,9 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 
+############################################
+# Exceptions related to the Encryptor class:
+############################################
 class DataAlreadyEncryptedException(Exception):
     """
     An exception for cases where new data is being added to the encryptor's data, after the old data was encrypted.
@@ -21,6 +24,18 @@ class DataNotLoadedException(Exception):
         super().__init__('Cannot encrypt data that was not yet loaded')
 
 
+class DataNotEncryptedException(Exception):
+    """
+    An exception for cases where the encryptor is attempting to perform an action that requires the data to be encrypted,
+    while the data is not encrypted.
+    """
+    def __init__(self, message='Attempting to perform an action that requires the data to be encrypted'):
+        super().__init__(message)
+
+
+###################
+# The class itself:
+###################
 class Encryptor:
     """
     A class that is used to encrypt data using a password-based key and various encryption methods.
