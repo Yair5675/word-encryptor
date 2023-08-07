@@ -50,6 +50,8 @@ class InvalidEncryptedFileExtensionException(Exception):
 class Encryptor:
     """
     A class that is used to encrypt data using a password-based key and various encryption methods.
+    This class supports the builder pattern when handling the data its instances contain, so chaining multiple commands
+    together is available to the user of the class.
     """
     __slots__ = [
         '__key',  # The key which will primarily decide how the data will be encrypted. It is based on the password given
@@ -107,7 +109,7 @@ class Encryptor:
     def is_encrypted(self) -> bool:
         """
         Checks if the data saved inside the Encryptor instance is already encrypted.
-        :return: True if the data saved in the Encryptor instance is already encrypted, False otherwise. If no data is
+        :returns: True if the data saved in the Encryptor instance is already encrypted, False otherwise. If no data is
                  present in the instance, False will be returned.
         :rtype: bool
         """
@@ -116,15 +118,23 @@ class Encryptor:
     def clear_data(self):
         """
         Clears the text saved in the instance.
+        :returns: The current Encryptor instance. This way chaining multiple different methods together is doable.
+        :rtype: Encryptor
         """
+        # Resetting the data and turning the encrypted flag to False:
         self.__data = ''
         self.__is_encrypted = False
+
+        # Returning the current Encryptor instance to support the builder pattern:
+        return self
 
     def enter_data(self, data: str):
         """
         Enters new data to the encryptor. If the data stored in the encryptor is already encrypted, an error will be raised.
         :param data: A new string of data that will be saved in the instance and be encrypted in the future using the
                      'encrypt' function.
+        :returns: The current Encryptor instance. This way chaining multiple different methods together is doable.
+        :rtype: Encryptor
         :raises DataAlreadyEncryptedException: If the current Encryptor instance has not cleared its data since it was last
                                                encrypted.
         """
@@ -135,11 +145,16 @@ class Encryptor:
             # If not, add the data:
             self.__data += data
 
+        # Returning the current Encryptor instance to support the builder pattern:
+        return self
+
     def encrypt_data(self):
         """
         Encrypts the data that was loaded to the Encryptor instance. Pay attention that the function does not return the
         encrypted data, but only performs the encryption. If the data in the encryptor is already encrypted, or no data was
         loaded at all, the function will raise an appropriate error.
+        :returns: The current Encryptor instance. This way chaining multiple different methods together is doable.
+        :rtype: Encryptor
         :raises DataAlreadyEncryptedException: If the current data in the Encryptor instance was already encrypted.
         :raises DataNotLoadedException: If no data was given to the Encryptor instance prior to the function's call, or if it
                                         was cleared.
@@ -172,6 +187,9 @@ class Encryptor:
 
         # Change 'is_encrypted' to true:
         self.__is_encrypted = True
+
+        # Returning the current Encryptor instance to support the builder pattern:
+        return self
 
     def save_to_file(self, file_path: str):
         """
