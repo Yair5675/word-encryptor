@@ -63,6 +63,10 @@ class Encryptor:
                           # otherwise.
         ]
 
+    # Constants in the class:
+    __KEY_LENGTH = 32  # The amount of bytes the key will be made of (multiply by 8 to get the amount of bits)
+    __KEY_ITERATIONS = 100000  # Number of iteration to create the encryption key (higher is more secure but slower)
+
     def __init__(self, password: str, salt_size: int):
         # Ensuring type safety for the password:
         if type(password) != str:
@@ -231,9 +235,9 @@ class Encryptor:
         # Create a key derivation function (PBKDF2) with SHA-256 as the hash function:
         kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
-            length=32,  # 256-bit key length
+            length=Encryptor.__KEY_LENGTH,  # Length of the key in bytes
             salt=salt,
-            iterations=100000,  # Number of iterations (higher is more secure but slower)
+            iterations=Encryptor.__KEY_ITERATIONS,  # Number of iterations (higher is more secure but slower)
             backend=default_backend()
         )
         # Derive the encryption key from the provided password and salt
