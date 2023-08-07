@@ -63,9 +63,14 @@ class Encryptor:
     def get_encrypted_data(self) -> bytes:
         """
         A getter method for the data that the Encryptor instance is holding. If the data hadn't been encrypted prior to the
-        function call, it will be automatically encrypted and then returned.
+        function call, it will be automatically encrypted and then returned. If no data was loaded into the instance, an
+        exception will be raised.
         :return: The encrypted data saved inside the Encryptor instance.
+        :raises DataNotLoadedException: If no data was saved in the instance or if it was cleared prior to the function call.
         """
+        # Checking there is any data to return:
+        if self.is_empty():
+            raise DataNotLoadedException()
         # Making sure the data is encrypted before we return it:
         if not self.__is_encrypted:
             self.encrypt_data()
