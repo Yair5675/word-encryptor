@@ -60,6 +60,18 @@ class Encryptor:
         """
         return len(self.__data) == 0
 
+    def get_encrypted_data(self) -> bytes:
+        """
+        A getter method for the data that the Encryptor instance is holding. If the data hadn't been encrypted prior to the
+        function call, it will be automatically encrypted and then returned.
+        :return: The encrypted data saved inside the Encryptor instance.
+        """
+        # Making sure the data is encrypted before we return it:
+        if not self.__is_encrypted:
+            self.encrypt_data()
+
+        return self.__data
+
     def is_encrypted(self) -> bool:
         """
         Checks if the data saved inside the Encryptor instance is already encrypted.
