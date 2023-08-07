@@ -131,7 +131,7 @@ class Encryptor:
         :rtype: Encryptor
         """
         # Resetting the data and turning the encrypted flag to False:
-        self.__data = ''
+        self.__data = b''
         self.__is_encrypted = False
 
         # Returning the current Encryptor instance to support the builder pattern:
@@ -152,7 +152,7 @@ class Encryptor:
             raise DataAlreadyEncryptedException('Cannot change the pure data in the Encryptor as it was already encrypted')
         else:
             # If not, add the data:
-            self.__data += data
+            self.__data += data.encode('utf-8')
 
         # Returning the current Encryptor instance to support the builder pattern:
         return self
