@@ -181,6 +181,11 @@ class Encryptor:
         # Checking if the deque is empty:
         if chunks_saved == 0:
             raise DataNotLoadedException('Cannot clear chunk from empty Encryptor instance')
+
+        # Changing the is encrypted attribute to False and resetting it (the encrypted data was removed):
+        self.__is_encrypted = False
+        self.__encrypted_data = b''
+
         # Removing the first chunk and returning it:
         return self.__raw_data.popleft()
 
