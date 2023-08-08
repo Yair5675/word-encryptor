@@ -75,6 +75,7 @@ class Encryptor:
         ]
 
     # Constants in the class:
+    __IV_SIZE = 16  # The amount of bytes that will be dedicated to the initialization vector during the encryption.
     __SALT_SIZE = 32  # The amount of bytes that will be dedicated to the salt
 
     __KEY_LENGTH = 32  # The amount of bytes the key will be made of (multiply by 8 to get the amount of bits)
@@ -185,7 +186,7 @@ class Encryptor:
         padded_data = padder.update(self.__data) + padder.finalize()
 
         # Generate a random IV (Initialization Vector) for the encryption:
-        iv = os.urandom(16)
+        iv = os.urandom(Encryptor.__IV_SIZE)
 
         # Create a Cipher object using AES in CFB mode with the key and IV:
         cipher = Cipher(algorithms.AES(self.__key), modes.CFB(iv), backend=default_backend())
