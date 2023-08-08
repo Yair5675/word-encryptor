@@ -217,6 +217,13 @@ class Encryptor:
         :raises DataAlreadyEncryptedException: If the current Encryptor instance has not cleared its data since it was last
                                                encrypted.
         """
+        # Checking the type of data:
+        if type(data) != str:
+            raise ValueError(f'Expected data of type str, got {type(data)} instead')
+
+        # Converting the data to bytes right away:
+        data = data.encode('utf-8')
+
         # Checking if the data was already encrypted:
         if self.__is_encrypted:
             raise DataAlreadyEncryptedException('Cannot change the pure data in the Encryptor as it was already encrypted')
@@ -229,7 +236,7 @@ class Encryptor:
 
         # Adding what we can to the last chunk:
         if space_left > 0:
-            last_chunk += data[:space_left].encode('utf-8')
+            last_chunk += data[:space_left]
             data = data[space_left:]
 
         # Returning the last chunk to the deque:
@@ -237,7 +244,7 @@ class Encryptor:
 
         # Adding the rest of the new data in chunks until nothing is left:
         while len(data) > 0:
-            self.__raw_data.append(data[:self.__max_chunk_size].encode('utf-8'))
+            self.__raw_data.append(data[:self.__max_chunk_size])
             data = data[self.__max_chunk_size:]
 
         # Returning the current Encryptor instance to support the builder pattern:
