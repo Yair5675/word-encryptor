@@ -80,8 +80,6 @@ class Encryptor:
         '__encrypted_data',  # A bytes object whose size is equal to the 'max_encryption_size' attribute (see also). This is
                              # done as a safety mechanism to prevent oversize encryptions.
 
-        '__is_encrypted',  # A boolean value which is True if the current data chunk is encrypted, and False otherwise.
-
         '__max_chunk_size'  # To prevent excessive memory usages, this attribute will serve as an upper bound to the size of
                             # the raw data in each chunk. This size will ensure that encrypting a raw data chunk will always
                             # result in encrypted data whose size is less than the maximum size specified in the constructor.
@@ -132,8 +130,6 @@ class Encryptor:
         self.__encrypted_data = b''
         # Initializing the raw data:
         self.__raw_data = deque()
-        # Initializing the is_encrypted flag:
-        self.__is_encrypted = False
 
     def is_empty(self) -> bool:
         """
@@ -157,7 +153,7 @@ class Encryptor:
         if self.is_empty():
             raise DataNotLoadedException('Cannot retrieve encrypted data which was cleared or not loaded at all')
         # Making sure the data is encrypted before we return it:
-        if not self.__is_encrypted:
+        if not self.is_encrypted():
             self.encrypt_data()
 
         # Return the encrypted data of the current chunk (without removing it):
@@ -170,7 +166,7 @@ class Encryptor:
                   present in the instance, False will be returned.
         :rtype: bool
         """
-        return self.__is_encrypted
+        return len(self.__encrypted_data) != 0
 
     def pop_chunk(self) -> bytes:
         """
@@ -187,8 +183,7 @@ class Encryptor:
         if chunks_saved == 0:
             raise DataNotLoadedException('Cannot clear chunk from empty Encryptor instance')
 
-        # Changing the is encrypted attribute to False and resetting it (the encrypted data was removed):
-        self.__is_encrypted = False
+        # Removing the encrypted data:
         self.__encrypted_data = b''
 
         # Removing the first chunk and returning it:
@@ -210,9 +205,6 @@ class Encryptor:
 
         # Resetting the encrypted data:
         self.__encrypted_data = b''
-
-        # Resetting the is_encrypted flag:
-        self.__is_encrypted = False
 
         # Returning the current Encryptor instance to support the builder pattern:
         return self
@@ -237,7 +229,7 @@ class Encryptor:
         data = data.encode('utf-8')
 
         # Checking if the data was already encrypted:
-        if self.__is_encrypted:
+        if self.is_encrypted():
             raise DataAlreadyEncryptedException('Cannot change the pure data in the Encryptor as it was already encrypted')
 
         # Getting the last data chunk saved:
@@ -279,7 +271,7 @@ class Encryptor:
         if self.is_empty():
             raise DataNotLoadedException('Cannot encrypt data which was cleared or not loaded at all')
         # Checking if the data was already encrypted:
-        elif self.__is_encrypted:
+        elif self.is_encrypted():
             raise DataAlreadyEncryptedException('Cannot re-encrypt data after it was encrypted')
 
         # Padding the data to match the block size of the AES algorithm:
@@ -301,9 +293,6 @@ class Encryptor:
         # Save the encrypted data as a concatenation of salt, IV and cipher_data:
         self.__encrypted_data = self.__salt + iv + cipher_data
 
-        # Change 'is_encrypted' to true:
-        self.__is_encrypted = True
-
         # Returning the current Encryptor instance to support the builder pattern:
         return self
 
@@ -323,7 +312,7 @@ class Encryptor:
         if self.is_empty():
             raise DataNotLoadedException('Cannot save encrypted data to file because data was cleared or not loaded at all')
         # Checking if the data wasn't encrypted:
-        elif not self.__is_encrypted:
+        elif not self.is_encrypted():
             raise DataNotEncryptedException('Data must be encrypted before being saved to a file')
         # Checking that the file path ends with the '.bin' extension:
         elif not file_path.endswith('.bin'):
