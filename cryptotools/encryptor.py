@@ -188,6 +188,8 @@ class Encryptor:
     def enter_data(self, data: str):
         """
         Enters new data to the encryptor. If the data stored in the encryptor is already encrypted, an error will be raised.
+        If the data given is too large to be added to the last chunk of saved data, it will be split into smaller chunks that
+        will be added to the encryptor. Notice the 'encrypt' method will only encrypt the first chunk that was entered.
         :param data: A new string of data that will be saved in the instance and be encrypted in the future using the
                      'encrypt' function.
         :returns: The current Encryptor instance. This way chaining multiple different methods together is doable.
@@ -198,9 +200,25 @@ class Encryptor:
         # Checking if the data was already encrypted:
         if self.__is_encrypted:
             raise DataAlreadyEncryptedException('Cannot change the pure data in the Encryptor as it was already encrypted')
-        else:
-            # If not, add the data:
-            self.__data += data.encode('utf-8')
+
+        # Getting the last data chunk saved:
+        last_chunk = self.__raw_data.pop() if self.__raw_data else b''  # Make sure to check the raw data isn't empty
+
+        # Calculating the space left in the chunk:
+        space_left = self.__max_chunk_size - len(last_chunk)
+
+        # Adding what we can to the last chunk:
+        if space_left > 0:
+            last_chunk += data[:space_left]
+            data = data[space_left:]
+
+        # Returning the last chunk to the deque:
+        self.__raw_data.append(last_chunk)
+
+        # Adding the rest of the new data in chunks until nothing is left:
+        while len(data) > 0:
+            self.__raw_data.append(data[:self.__max_chunk_size])
+            data = data[self.__max_chunk_size:]
 
         # Returning the current Encryptor instance to support the builder pattern:
         return self
