@@ -275,6 +275,19 @@ class Encryptor:
             file.write(self.__data)
 
     @staticmethod
+    def __calc_encrypted_data_size(raw_data_size) -> int:
+        """
+        Given the size of the raw data, the function calculates the future size of the encrypted data, with an added saftey
+        margin.
+        :param raw_data_size: The size of the raw data (data before encryption).
+        :return: The future size of the data after encryption.
+        """
+        # Adding a safety margin (just to be safe the prediction will be larger than the actual result):
+        safety_margin = 64
+        # Through experiments, the correlation between raw len and encrypted len is: encrypted = raw + 64
+        return raw_data_size + 64 + safety_margin
+
+    @staticmethod
     def derive_key(password: str, salt: bytes) -> bytes:
         """
         Creates an encryption key based on the given password and salt parameters.
