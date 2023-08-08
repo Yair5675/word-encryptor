@@ -75,20 +75,23 @@ class Encryptor:
         ]
 
     # Constants in the class:
+    MINIMUM_ENCRYPTION_SIZE = 1024 * 1024  # The minimum amount of bytes that is allocated to the encryption.
+
     __IV_SIZE = 16  # The amount of bytes that will be dedicated to the initialization vector during the encryption.
     __SALT_SIZE = 32  # The amount of bytes that will be dedicated to the salt
 
     __KEY_LENGTH = 32  # The amount of bytes the key will be made of (multiply by 8 to get the amount of bits)
     __KEY_ITERATIONS = 100000  # Number of iteration to create the encryption key (higher is more secure but slower)
 
-    def __init__(self, password: str, max_encryption_size: int = 2 * 1024 * 1024):
+    def __init__(self, password: str, max_encryption_size: int = MINIMUM_ENCRYPTION_SIZE):
         """
         The constructor of the encryptor class.
         :param password: A piece of string that will be used to make a specialized key for the encryption method.
         :type password: str
         :param max_encryption_size: An upper bound to the size of the encrypted data, measured in bytes, used to prevent
                                     overly large encryption data and excessive memory usage. This value must be above or
-                                    equal to 2 MegaBytes (the default size), but can be larger.
+                                    equal to the class attribute MINIMUM_ENCRYPTION_SIZE (the default size), but can be
+                                    larger if specified.
         :type max_encryption_size: int
         """
         # Ensuring type safety for the password:
@@ -99,8 +102,10 @@ class Encryptor:
         if type(max_encryption_size) != int:
             raise TypeError(f'Expected a max encryption size of type int, got {type(max_encryption_size)} instead')
         # Ensuring the value of the max encryption size is valid:
-        if max_encryption_size < 2 * 1024 * 1024:
-            raise ValueError(f'Max encryption size must be above or equal to 2 MB ({2 * 1024 * 1024} bytes)')
+        if max_encryption_size < Encryptor.MINIMUM_ENCRYPTION_SIZE:
+            raise ValueError(f'Max encryption size must be above or equal to '
+                             f'{Encryptor.MINIMUM_ENCRYPTION_SIZE // (1024 * 1024)} MB ({Encryptor.MINIMUM_ENCRYPTION_SIZE}'
+                             f' bytes)')
         # Setting the max encryption size:
         self.__max_encryption_size = max_encryption_size
 
