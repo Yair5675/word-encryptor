@@ -179,8 +179,7 @@ class Encryptor:
 
         # Checking if the deque is empty:
         if chunks_saved == 0:
-            raise DataNotLoadedException('Cannot clear chunk from empty Encryptor instance'
-                                         )
+            raise DataNotLoadedException('Cannot clear chunk from empty Encryptor instance')
         # Removing the first chunk:
         self.__raw_data.popleft()
 
@@ -192,7 +191,12 @@ class Encryptor:
         Clears the all data saved in the instance.
         :returns: The current Encryptor instance. This way chaining multiple different methods together is doable.
         :rtype: Encryptor
+        :raises DataNotLoadedException: If the encryptor was already cleared prior to the function call.
         """
+        # Checking if the deque is empty:
+        if self.is_empty():
+            raise DataNotLoadedException('Cannot clear data from empty Encryptor instance')
+
         # Resetting the raw data:
         self.__raw_data.clear()
 
