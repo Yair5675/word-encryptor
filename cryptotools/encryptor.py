@@ -29,7 +29,7 @@ class DataAlreadyEncryptedException(EncryptorException):
 class DataNotLoadedException(EncryptorException):
     """
     An exception for cases where the Encryptor is attempting to use the data saved in it for various purposes, but no data
-    was loaded to it in the first place.
+    was loaded to it in the first place, or it was cleared.
     """
     def __init__(self, message='Attempting to perform and action with data that was not yet loaded or was cleared'):
         super().__init__(message)
@@ -61,6 +61,11 @@ class Encryptor:
     A class that is used to encrypt data using a password-based key and various encryption methods.
     This class supports the builder pattern when handling the data its instances contain, so chaining multiple commands
     together is available to the user of the class.
+    To deal with large amount of data, the class breaks down the data it receives into chunks. The maximum size of each chunk
+    is determined in the constructor, where the user is asked to specify the maximum encryption size in bytes.
+    If the data is too large and requires multiple chunks, calling the encrypt method will only encrypt the first chunk, and
+    only this chunk will be available. To proceed to the next chunk, use the 'pop_chunk' method to remove the non-encrypted
+    chunk (which will also be returned).
     """
     __slots__ = [
         '__key',  # The key which will primarily decide how the data will be encrypted. It is based on the password given
@@ -93,7 +98,7 @@ class Encryptor:
 
     def __init__(self, password: str, max_encryption_size: int = MINIMUM_ENCRYPTION_SIZE):
         """
-        The constructor of the encryptor class.
+        The constructor of the Encryptor class.
         :param password: A piece of string that will be used to make a specialized key for the encryption method.
         :type password: str
         :param max_encryption_size: An upper bound to the size of the encrypted data, measured in bytes, used to prevent
@@ -101,6 +106,7 @@ class Encryptor:
                                     equal to the class attribute MINIMUM_ENCRYPTION_SIZE (the default size), but can be
                                     larger if specified.
         :type max_encryption_size: int
+        :rtype: Encryptor
         """
         # Ensuring type safety for the password:
         if type(password) != str:
@@ -143,7 +149,6 @@ class Encryptor:
         the maximum encryption size, only a chunk of the saved data will be encrypted and returned (the size of the chunk
         will be equal to the maximum encryption size).
         If the data hadn't been encrypted prior to the function call, it will be automatically encrypted and then returned.
-        If no data was loaded into the instance, an exception will be raised.
         :return: The encrypted data saved inside the Encryptor instance.
         :rtype: bytes
         :raises DataNotLoadedException: If no data was saved in the instance or if it was cleared prior to the function call.
@@ -162,7 +167,7 @@ class Encryptor:
         """
         Checks if the data saved inside the Encryptor instance is already encrypted.
         :returns: True if the data saved in the Encryptor instance is already encrypted, False otherwise. If no data is
-                 present in the instance, False will be returned.
+                  present in the instance, False will be returned.
         :rtype: bool
         """
         return self.__is_encrypted
