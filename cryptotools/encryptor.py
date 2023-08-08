@@ -167,11 +167,12 @@ class Encryptor:
         """
         return self.__is_encrypted
 
-    def clear_chunk(self) -> bool:
+    def pop_chunk(self) -> bytes:
         """
         Clears the first saved chunk in the encryptor (the first chunk will be the oldest chunk of data that was not cleared
-        prior to the function call).
-        :return: True if after the removal of the chunk the encryptor is empty, False otherwise.
+        prior to the function call) and returns it.
+        :return: The raw data chunk that was removed from the encryptor.
+        :rtype: bytes
         :raises DataNotLoadedException: If the instance doesn't hold any data to be cleared.
         """
         # Getting the number of chunks saved:
@@ -180,11 +181,8 @@ class Encryptor:
         # Checking if the deque is empty:
         if chunks_saved == 0:
             raise DataNotLoadedException('Cannot clear chunk from empty Encryptor instance')
-        # Removing the first chunk:
-        self.__raw_data.popleft()
-
-        # Returning the state of the deque after the popping (empty or not):
-        return chunks_saved == 1
+        # Removing the first chunk and returning it:
+        return self.__raw_data.popleft()
 
     def clear_data(self):
         """
