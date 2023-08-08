@@ -241,9 +241,11 @@ class Encryptor:
 
     def encrypt_data(self):
         """
-        Encrypts the data that was loaded to the Encryptor instance. Pay attention that the function does not return the
-        encrypted data, but only performs the encryption. If the data in the encryptor is already encrypted, or no data was
-        loaded at all, the function will raise an appropriate error.
+        Encrypts the data that was loaded to the Encryptor instance. The function only encrypts the first chunk saved in the
+        encryptor (the oldest chunk that wasn't cleared). To encrypt the rest of the chunks, the current chunk will have to
+        be cleared prior to calling this function again.
+        Pay attention that the function does not return the encrypted data, but only performs the encryption. If the data in
+        the encryptor is already encrypted, or no data was loaded at all, the function will raise an appropriate error.
         :returns: The current Encryptor instance. This way chaining multiple different methods together is doable.
         :rtype: Encryptor
         :raises DataAlreadyEncryptedException: If the current data in the Encryptor instance was already encrypted.
