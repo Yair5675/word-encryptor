@@ -1,4 +1,5 @@
 import os
+from collections import deque
 from cryptography.hazmat.primitives import hashes, padding
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -64,11 +65,18 @@ class Encryptor:
     __slots__ = [
         '__key',  # The key which will primarily decide how the data will be encrypted. It is based on the password given
                   # inside the constructor.
-        '__salt',  # A random collection of bytes to improve the security of the encryption. The number of random bytes will
-                   # be given as a parameter for the constructor.
-        '__data',  # The data that was encrypted or is about to be encrypted by the Encryptor instance.
-        '__is_encrypted',  # A boolean value which is True if the data held by the Encryptor instance is encrypted, and False
-                           # otherwise.
+
+        '__salt',  # A random collection of bytes to improve the security of the encryption.
+
+        '__raw_data',  # A deque where each element is a collection of non-encrypted bytes that the user fed the instance.
+                       # The size of each element will be limited in a way that the size of the encryption of the bytes in
+                       # the element will always be less than or equal to the 'max_encryption_size' (see also).
+
+        '__encrypted_data',  # A bytes object whose size is equal to the 'max_encryption_size' attribute (see also). This is
+                             # done as a safety mechanism to prevent oversize encryptions.
+
+        '__is_encrypted',  # A boolean value which is True if the current data chunk is encrypted, and False otherwise.
+
         '__max_encryption_size'  # To prevent excessive memory usages, this attribute will serve as an upper bound to the
                                  # size of the encryption. If the resulting encryption is larger than this max size, it will
                                  # be broken down into chunks.
@@ -113,8 +121,13 @@ class Encryptor:
         self.__salt = os.urandom(Encryptor.__SALT_SIZE)
         # Derive key:
         self.__key = Encryptor.derive_key(password, self.__salt)
-        # Initializing the saved data and the 'is_encrypted' attribute:
-        self.clear_data()
+
+        # Initializing the encrypted data:
+        self.__encrypted_data = b''
+        # Initializing the raw data:
+        self.__raw_data = deque()
+        # Initializing the is_encrypted flag:
+        self.__is_encrypted = False
 
     def is_empty(self) -> bool:
         """
@@ -122,13 +135,15 @@ class Encryptor:
         :return: True if no data is saved inside the Encryptor instance, False otherwise.
         :rtype: bool
         """
-        return len(self.__data) == 0
+        return not self.__raw_data
 
     def get_encrypted_data(self) -> bytes:
         """
-        A getter method for the data that the Encryptor instance is holding. If the data hadn't been encrypted prior to the
-        function call, it will be automatically encrypted and then returned. If no data was loaded into the instance, an
-        exception will be raised.
+        A getter method for the data that the Encryptor instance is holding. If the size of the saved data is larger than
+        the maximum encryption size, only a chunk of the saved data will be encrypted and returned (the size of the chunk
+        will be equal to the maximum encryption size).
+        If the data hadn't been encrypted prior to the function call, it will be automatically encrypted and then returned.
+        If no data was loaded into the instance, an exception will be raised.
         :return: The encrypted data saved inside the Encryptor instance.
         :rtype: bytes
         :raises DataNotLoadedException: If no data was saved in the instance or if it was cleared prior to the function call.
@@ -140,7 +155,8 @@ class Encryptor:
         if not self.__is_encrypted:
             self.encrypt_data()
 
-        return self.__data
+        # Return the encrypted data of the current chunk (without removing it):
+        return self.__encrypted_data
 
     def is_encrypted(self) -> bool:
         """
@@ -153,12 +169,17 @@ class Encryptor:
 
     def clear_data(self):
         """
-        Clears the text saved in the instance.
+        Clears the all data saved in the instance.
         :returns: The current Encryptor instance. This way chaining multiple different methods together is doable.
         :rtype: Encryptor
         """
-        # Resetting the data and turning the encrypted flag to False:
-        self.__data = b''
+        # Resetting the raw data:
+        self.__raw_data.clear()
+
+        # Resetting the encrypted data:
+        self.__encrypted_data = b''
+
+        # Resetting the is_encrypted flag:
         self.__is_encrypted = False
 
         # Returning the current Encryptor instance to support the builder pattern:
@@ -204,7 +225,7 @@ class Encryptor:
 
         # Padding the data to match the block size of the AES algorithm:
         padder = padding.PKCS7(algorithms.AES.block_size).padder()
-        padded_data = padder.update(self.__data) + padder.finalize()
+        padded_data = padder.update(self.__raw_data[0]) + padder.finalize()  # Encrypting only the first chunk of data
 
         # Generate a random IV (Initialization Vector) for the encryption:
         iv = os.urandom(Encryptor.__IV_SIZE)
@@ -219,7 +240,7 @@ class Encryptor:
         cipher_data = encryptor.update(padded_data) + encryptor.finalize()
 
         # Save the encrypted data as a concatenation of salt, IV and cipher_data:
-        self.__data = self.__salt + iv + cipher_data
+        self.__encrypted_data = self.__salt + iv + cipher_data
 
         # Change 'is_encrypted' to true:
         self.__is_encrypted = True
