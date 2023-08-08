@@ -77,9 +77,9 @@ class Encryptor:
 
         '__is_encrypted',  # A boolean value which is True if the current data chunk is encrypted, and False otherwise.
 
-        '__max_encryption_size'  # To prevent excessive memory usages, this attribute will serve as an upper bound to the
-                                 # size of the encryption. If the resulting encryption is larger than this max size, it will
-                                 # be broken down into chunks.
+        '__max_chunk_size'  # To prevent excessive memory usages, this attribute will serve as an upper bound to the size of
+                            # the raw data in each chunk. This size will ensure that encrypting a raw data chunk will always
+                            # result in encrypted data whose size is less than the maximum size specified in the constructor.
         ]
 
     # Constants in the class:
@@ -114,8 +114,8 @@ class Encryptor:
             raise ValueError(f'Max encryption size must be above or equal to '
                              f'{Encryptor.MINIMUM_ENCRYPTION_SIZE // (1024 * 1024)} MB ({Encryptor.MINIMUM_ENCRYPTION_SIZE}'
                              f' bytes)')
-        # Setting the max encryption size:
-        self.__max_encryption_size = max_encryption_size
+        # Calculating the max chunk size:
+        self.__max_chunk_size = Encryptor.__calc_raw_data_size(max_encryption_size)
 
         # Generate random salt bytes for the encryption:
         self.__salt = os.urandom(Encryptor.__SALT_SIZE)
@@ -275,9 +275,9 @@ class Encryptor:
             file.write(self.__data)
 
     @staticmethod
-    def __calc_encrypted_data_size(raw_data_size) -> int:
+    def __calc_encrypted_data_size(raw_data_size: int) -> int:
         """
-        Given the size of the raw data, the function calculates the future size of the encrypted data, with an added saftey
+        Given the size of the raw data, the function calculates the future size of the encrypted data, with an added safety
         margin.
         :param raw_data_size: The size of the raw data (data before encryption).
         :return: The future size of the data after encryption.
@@ -286,6 +286,19 @@ class Encryptor:
         safety_margin = 64
         # Through experiments, the correlation between raw len and encrypted len is: encrypted = raw + 64
         return raw_data_size + 64 + safety_margin
+
+    @staticmethod
+    def __calc_raw_data_size(encrypted_data_size: int) -> int:
+        """
+        Given the size of the encrypted data, the function calculates the size of the raw data that was encrypted.
+        :param encrypted_data_size: The number of bytes of the encrypted data.
+        :type encrypted_data_size: int
+        :return: The size of the original raw data that was encrypted, minus a safety margin.
+        """
+        # Adding a safety margin (just to ensure the prediction will be lower than the actual result):
+        safety_margin = 64
+        # Through experiments, the correlation between raw len and encrypted len is: encrypted = raw + 64.
+        return encrypted_data_size - 64 - safety_margin
 
     @staticmethod
     def derive_key(password: str, salt: bytes) -> bytes:
