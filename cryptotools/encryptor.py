@@ -308,7 +308,7 @@ class Encryptor:
 
         # Saving the data to the specified file:
         with open(file_path, 'wb') as file:
-            file.write(self.__data)
+            file.write(self.__encrypted_data)
 
     @staticmethod
     def __calc_encrypted_data_size(raw_data_size: int) -> int:
