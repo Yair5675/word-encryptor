@@ -82,9 +82,27 @@ class Encryptor:
     __KEY_ITERATIONS = 100000  # Number of iteration to create the encryption key (higher is more secure but slower)
 
     def __init__(self, password: str, max_encryption_size: int = 2 * 1024 * 1024):
+        """
+        The constructor of the encryptor class.
+        :param password: A piece of string that will be used to make a specialized key for the encryption method.
+        :type password: str
+        :param max_encryption_size: An upper bound to the size of the encrypted data, measured in bytes, used to prevent
+                                    overly large encryption data and excessive memory usage. This value must be above or
+                                    equal to 2 MegaBytes (the default size), but can be larger.
+        :type max_encryption_size: int
+        """
         # Ensuring type safety for the password:
         if type(password) != str:
             raise TypeError(f'Expected a password of type str, got {type(password)} instead')
+
+        # Ensuring type safety for the max encryption size:
+        if type(max_encryption_size) != int:
+            raise TypeError(f'Expected a max encryption size of type int, got {type(max_encryption_size)} instead')
+        # Ensuring the value of the max encryption size is valid:
+        if max_encryption_size < 2 * 1024 * 1024:
+            raise ValueError(f'Max encryption size must be above or equal to 2 MB ({2 * 1024 * 1024} bytes)')
+        # Setting the max encryption size:
+        self.__max_encryption_size = max_encryption_size
 
         # Generate random salt bytes for the encryption:
         self.__salt = os.urandom(Encryptor.__SALT_SIZE)
@@ -92,8 +110,6 @@ class Encryptor:
         self.__key = Encryptor.derive_key(password, self.__salt)
         # Initializing the saved data and the 'is_encrypted' attribute:
         self.clear_data()
-        # Setting the max encryption size:
-        self.__max_encryption_size = max_encryption_size
 
     def is_empty(self) -> bool:
         """
