@@ -225,7 +225,7 @@ class Encryptor:
 
         # Adding what we can to the last chunk:
         if space_left > 0:
-            last_chunk += data[:space_left]
+            last_chunk += data[:space_left].encode('utf-8')
             data = data[space_left:]
 
         # Returning the last chunk to the deque:
@@ -233,7 +233,7 @@ class Encryptor:
 
         # Adding the rest of the new data in chunks until nothing is left:
         while len(data) > 0:
-            self.__raw_data.append(data[:self.__max_chunk_size])
+            self.__raw_data.append(data[:self.__max_chunk_size].encode('utf-8'))
             data = data[self.__max_chunk_size:]
 
         # Returning the current Encryptor instance to support the builder pattern:
