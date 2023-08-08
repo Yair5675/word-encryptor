@@ -67,8 +67,11 @@ class Encryptor:
         '__salt',  # A random collection of bytes to improve the security of the encryption. The number of random bytes will
                    # be given as a parameter for the constructor.
         '__data',  # The data that was encrypted or is about to be encrypted by the Encryptor instance.
-        '__is_encrypted'  # A boolean value which is True if the data held by the Encryptor instance is encrypted, and False
-                          # otherwise.
+        '__is_encrypted',  # A boolean value which is True if the data held by the Encryptor instance is encrypted, and False
+                           # otherwise.
+        '__max_encryption_size'  # To prevent excessive memory usages, this attribute will serve as an upper bound to the
+                                 # size of the encryption. If the resulting encryption is larger than this max size, it will
+                                 # be broken down into chunks.
         ]
 
     # Constants in the class:
@@ -77,7 +80,7 @@ class Encryptor:
     __KEY_LENGTH = 32  # The amount of bytes the key will be made of (multiply by 8 to get the amount of bits)
     __KEY_ITERATIONS = 100000  # Number of iteration to create the encryption key (higher is more secure but slower)
 
-    def __init__(self, password: str):
+    def __init__(self, password: str, max_encryption_size: int = 2 * 1024 * 1024):
         # Ensuring type safety for the password:
         if type(password) != str:
             raise TypeError(f'Expected a password of type str, got {type(password)} instead')
@@ -88,6 +91,8 @@ class Encryptor:
         self.__key = Encryptor.derive_key(password, self.__salt)
         # Initializing the saved data and the 'is_encrypted' attribute:
         self.clear_data()
+        # Setting the max encryption size:
+        self.__max_encryption_size = max_encryption_size
 
     def is_empty(self) -> bool:
         """
