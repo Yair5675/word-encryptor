@@ -105,6 +105,20 @@ class Encryptor:
                                     larger if specified.
         :type max_encryption_size: int
         :rtype: Encryptor
+
+        Code examples:
+            >>> # Properly instantiating an Encryptor with default max encryption size:
+            >>> encryptor = Encryptor('password123')
+            >>> # Properly instantiating an Encryptor with a custom max encryption size:
+            >>> encryptor = Encryptor('password123', max_encryption_size=3*1024*1024)  # 3*1024*1024 = 3145728 bytes = 3 MB
+
+            >>> # Instantiating an object with an invalid password or max encryption size types:
+            >>> encryptor = Encryptor(password=1234)  # Will result in TypeError
+            >>> encryptor = Encryptor('password123', max_encryption_size='10002')  # Will result in TypeError
+
+            >>> # Instantiating an object with an invalid value for the max encryption size:
+            >>> encryptor = Encryptor('password123', max_encryption_size=-100)  # Will result in ValueError
+            >>> encryptor = Encryptor('password123', max_encryption_size=Encryptor.MINIMUM_ENCRYPTION_SIZE - 1)  # Will result in ValueError
         """
         # Ensuring type safety for the password:
         if type(password) != str:
