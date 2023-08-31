@@ -337,6 +337,15 @@ class Encryptor:
         with open(file_path, 'wb') as file:
             file.write(self.__encrypted_data)
 
+    def save_to_files(self, dir_path: str) -> None:
+        """
+        Encrypts all saved chunks in the instance and saves the encrypted result into separate files inside the specified
+        directory path (if the directory is not made the function will create it).
+        :param dir_path: The absolute path to the directory where the encrypted chunks will be written.
+        :type dir_path: str
+        """
+        pass
+
     @staticmethod
     def __calc_encrypted_data_size(raw_data_size: int) -> int:
         """
