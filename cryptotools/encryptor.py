@@ -312,9 +312,10 @@ class Encryptor:
 
     def save_to_file(self, file_path: str):
         """
-        Writes the encrypted data into a binary file (ends with '.bin'). If the file path doesn't end with '.bin', an
-        exception will be raised. If no data was saved in the Encryptor instance, an exception will be raised. If the data
-        wasn't encrypted prior to the function call, an exception will be raised.
+        Writes the encrypted data into a binary file (ends with '.bin'). Pay attention only the first chunk of raw data will
+        be encrypted, and not necessarily the entire saved data (for that, see 'save_to_files'). If the file path doesn't end
+        with '.bin', an exception will be raised. If no data was saved in the Encryptor instance, an exception will be
+        raised. If the data wasn't encrypted prior to the function call, an exception will be raised.
         :param file_path: The relative or absolute path to the location where the encrypted data will be saved, ending in the
                           file's name and the '.bin' file extension.
         :raises DataNotLoadedException: If no data is saved in the instance.
