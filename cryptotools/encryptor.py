@@ -344,7 +344,27 @@ class Encryptor:
         :param dir_path: The absolute path to the directory where the encrypted chunks will be written.
         :type dir_path: str
         """
-        pass
+        # Checking there is data to write to a file:
+        if self.is_empty():
+            raise DataNotLoadedException('Cannot save encrypted data to file because data was cleared or not loaded at all')
+
+        # The name of an individual encrypted file (brackets are the number):
+        CHUNK_NAME = 'pt_{}.bin'
+        # The current chunk number:
+        chunk_num = 1
+        # Looping until all chunks were written:
+        while not self.is_empty():
+            # Encrypt data if it isn't encrypted already:
+            if not self.is_encrypted():
+                self.encrypt_data()
+
+            # Saving the chunk:
+            with open(dir_path + fr"\{CHUNK_NAME.format(chunk_num)}") as file:
+                file.write(self.__encrypted_data)
+
+            # Popping the chunk and incrementing chunk_num:
+            chunk_num += 1
+            self.pop_chunk()
 
     @staticmethod
     def __calc_encrypted_data_size(raw_data_size: int) -> int:
