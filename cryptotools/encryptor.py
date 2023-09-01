@@ -340,9 +340,15 @@ class Encryptor:
     def save_to_files(self, dir_path: str) -> None:
         """
         Encrypts all saved chunks in the instance and saves the encrypted result into separate files inside the specified
-        directory path (if the directory is not made the function will create it).
+        directory path (if the directory is not made the function will create it). Pay attention that after the data will be
+        written into a file, it will be cleared from the instance.
+        If any I/O operation fails, the function will remove any files it managed to create prior to the exception. In this
+        case, the raw data will still be cleared in order to prevent inconsistencies (for example the crash may happen in the
+        third chunk or the fifth or any other, so the remaining data will be of inconsistent size).
         :param dir_path: The absolute path to the directory where the encrypted chunks will be written.
         :type dir_path: str
+        :raises IOError: If any I/O operation had failed.
+        :raises ValueError: If the given path isn't an absolute path.
         """
         # Checking there is data to write to a file:
         if self.is_empty():
@@ -360,19 +366,43 @@ class Encryptor:
         CHUNK_NAME = 'pt_{}.bin'
         # The current chunk number:
         chunk_num = 1
-        # Looping until all chunks were written:
-        while not self.is_empty():
-            # Encrypt data if it isn't encrypted already:
-            if not self.is_encrypted():
-                self.encrypt_data()
+        # A variable for any IO exception that may arise:
+        io_error = None
 
-            # Saving the chunk:
-            with open(dir_path + fr"\{CHUNK_NAME.format(chunk_num)}") as file:
-                file.write(self.__encrypted_data)
+        # Wrapping the creation of files in a try block to handle IO errors:
+        try:
+            # Looping until all chunks were written:
+            while not self.is_empty():
+                # Encrypt data if it isn't encrypted already:
+                if not self.is_encrypted():
+                    self.encrypt_data()
 
-            # Popping the chunk and incrementing chunk_num:
-            chunk_num += 1
-            self.pop_chunk()
+                # Saving the chunk:
+                chunk_path = os.path.join(dir_path, fr"{CHUNK_NAME.format(chunk_num)}")
+                with open(chunk_path) as chunk_file:
+                    chunk_file.write(self.__encrypted_data)
+
+                # Popping the chunk and incrementing chunk_num:
+                chunk_num += 1
+                self.pop_chunk()
+
+        # If an error occurred:
+        except IOError as ioe:
+            # Clear any files that were created:
+            for file_num in range(chunk_num, 0, -1):
+                path_to_remove = os.path.join(dir_path, fr"{CHUNK_NAME.format(file_num)}")
+                if os.path.exists(path_to_remove) and os.path.isfile(path_to_remove):
+                    os.remove(path_to_remove)
+            # Saving the exception (not raising it now because the raw data must be cleared first):
+            io_error = ioe
+        finally:
+            # Clear the data if it isn't cleared already:
+            if not self.is_empty():
+                self.clear_data()
+
+            # Raise the io exception if one was caught:
+            if io_error is not None:
+                raise io_error
 
     @staticmethod
     def __calc_encrypted_data_size(raw_data_size: int) -> int:
