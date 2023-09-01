@@ -313,22 +313,30 @@ class Encryptor:
     def save_to_file(self, file_path: str):
         """
         Writes the encrypted data into a binary file (ends with '.bin'). Pay attention only the first chunk of raw data will
-        be encrypted, and not necessarily the entire saved data (for that, see 'save_to_files'). If the file path doesn't end
-        with '.bin', an exception will be raised. If no data was saved in the Encryptor instance, an exception will be
-        raised. If the data wasn't encrypted prior to the function call, an exception will be raised.
-        :param file_path: The relative or absolute path to the location where the encrypted data will be saved, ending in the
-                          file's name and the '.bin' file extension.
+        be encrypted, and not necessarily the entire saved data (for that, see 'save_to_files'). Pay attention that in
+        contrast to the 'save_to_files' function, the current function does not delete any data saved in the instance, and
+        the current encrypted chunk will still be saved in the instance after it is written to the specified path. The path
+        of the file must be an ABSOLUTE path to the location where the chunk will be saved.
+        :param file_path: The absolute path to the location where the encrypted data will be saved, ending in the file's name
+                          and the '.bin' file extension.
+        :raises ValueError: If the given path isn't an absolute path.
         :raises DataNotLoadedException: If no data is saved in the instance.
         :raises DataNotEncryptedException: If the data saved in the instance was not encrypted prior to the function call.
         :raises InvalidEncryptedFileExtensionException: If the file to which the data will be written to doesn't end with the
                                                         '.bin' file extension.
         """
+        # Checking the type of the file_path:
+        if type(file_path) != str:
+            raise ValueError(f"Expected file path of type str, got {type(file_path)} instead")
         # Checking there is data to write to a file:
-        if self.is_empty():
+        elif self.is_empty():
             raise DataNotLoadedException('Cannot save encrypted data to file because data was cleared or not loaded at all')
         # Checking if the data wasn't encrypted:
         elif not self.is_encrypted():
             raise DataNotEncryptedException('Data must be encrypted before being saved to a file')
+        # Checking that the file path is absolute:
+        elif not os.path.isabs(file_path):
+            raise ValueError(f'The function only accepts absolute paths, yet a relative path was given ({file_path})')
         # Checking that the file path ends with the '.bin' extension:
         elif not file_path.endswith('.bin'):
             raise InvalidEncryptedFileExtensionException("Can only save encrypted data to files ending with '.bin'")
@@ -355,12 +363,12 @@ class Encryptor:
             raise DataNotLoadedException('Cannot save encrypted data to file because data was cleared or not loaded at all')
 
         # Making sure the path is a string:
-        if type(dir_path) != str:
+        elif type(dir_path) != str:
             raise ValueError(f'Expected directory path of type string, got {type(dir_path)} instead')
 
         # Making sure the path is absolute (and not relative) so encrypted files won't be saved to the package:
-        if not os.path.isabs(dir_path):
-            raise ValueError(f'The function only accepts absolute path, yet a relative path was given ({dir_path})')
+        elif not os.path.isabs(dir_path):
+            raise ValueError(f'The function only accepts absolute paths, yet a relative path was given ({dir_path})')
 
         # The name of an individual encrypted file (brackets are the number):
         CHUNK_NAME = 'pt_{}.bin'
