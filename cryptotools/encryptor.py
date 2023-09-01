@@ -348,6 +348,14 @@ class Encryptor:
         if self.is_empty():
             raise DataNotLoadedException('Cannot save encrypted data to file because data was cleared or not loaded at all')
 
+        # Making sure the path is a string:
+        if type(dir_path) != str:
+            raise ValueError(f'Expected directory path of type string, got {type(dir_path)} instead')
+
+        # Making sure the path is absolute (and not relative) so encrypted files won't be saved to the package:
+        if not os.path.isabs(dir_path):
+            raise ValueError(f'The function only accepts absolute path, yet a relative path was given ({dir_path})')
+
         # The name of an individual encrypted file (brackets are the number):
         CHUNK_NAME = 'pt_{}.bin'
         # The current chunk number:
