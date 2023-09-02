@@ -88,8 +88,8 @@ class Encryptor:
     # Constants in the class:
     MINIMUM_ENCRYPTION_SIZE = 1024 * 1024  # The minimum amount of bytes that is allocated to the encryption.
 
-    __IV_SIZE = 16  # The amount of bytes that will be dedicated to the initialization vector during the encryption.
-    __SALT_SIZE = 32  # The amount of bytes that will be dedicated to the salt
+    IV_SIZE = 16  # The amount of bytes that will be dedicated to the initialization vector during the encryption.
+    SALT_SIZE = 32  # The amount of bytes that will be dedicated to the salt
 
     __KEY_LENGTH = 32  # The amount of bytes the key will be made of (multiply by 8 to get the amount of bits)
     __KEY_ITERATIONS = 100000  # Number of iteration to create the encryption key (higher is more secure but slower)
@@ -136,7 +136,7 @@ class Encryptor:
         self.__max_chunk_size = Encryptor.__calc_raw_data_size(max_encryption_size)
 
         # Generate random salt bytes for the encryption:
-        self.__salt = os.urandom(Encryptor.__SALT_SIZE)
+        self.__salt = os.urandom(Encryptor.SALT_SIZE)
         # Derive key:
         self.__key = Encryptor.derive_key(password, self.__salt)
 
@@ -293,7 +293,7 @@ class Encryptor:
         padded_data = padder.update(self.__raw_data[0]) + padder.finalize()  # Encrypting only the first chunk of data
 
         # Generate a random IV (Initialization Vector) for the encryption:
-        iv = os.urandom(Encryptor.__IV_SIZE)
+        iv = os.urandom(Encryptor.IV_SIZE)
 
         # Create a Cipher object using AES in CFB mode with the key and IV:
         cipher = Cipher(algorithms.AES(self.__key), modes.CFB(iv), backend=default_backend())
