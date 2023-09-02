@@ -4,7 +4,10 @@ class Decryptor:
     encrypted using the Encryptor class, therefor it is not for general purpose decryption.
     """
     __slots__ = [
-        '__password'  # The password used during the encryption. It is needed to reverse the process
+        '__password',  # The password used during the encryption. It is needed to reverse the process.
+
+        '__decrypted_data'  # When using the Decryptor instance to decrypt data, the decrypted data will be saved to this
+                            # attribute.
     ]
 
     def __init__(self, password: str):
@@ -17,6 +20,8 @@ class Decryptor:
         """
         # Setting the password:
         self.set_password(password)
+        # Setting the decrypted data to an empty bytes object:
+        self.__decrypted_data = b''
 
     def set_password(self, password: str):
         """
