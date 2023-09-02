@@ -1,3 +1,17 @@
+############################################
+# Exceptions related to the Decryptor class:
+############################################
+class DecryptorException(Exception):
+    """
+    Base class for all exceptions that are raised due to misuse of the Decryptor class.
+    """
+    def __init__(self, message):
+        super().__init__(message)
+
+
+###################
+# The class itself:
+###################
 class Decryptor:
     """
     A class that is used to decrypt encrypted data using a password-based key. The class is meant to decrypt data which was
