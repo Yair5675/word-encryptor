@@ -1,3 +1,9 @@
+from cryptotools.encryptor import Encryptor
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
+
 ############################################
 # Exceptions related to the Decryptor class:
 ############################################
@@ -48,3 +54,35 @@ class Decryptor:
         if type(password) != str:
             raise TypeError(f'Expected a password of type str, got {type(password)} instead')
         self.__password = password
+
+    def decrypt_data(self, encrypted_data: bytes) -> None:
+        # TODO: Add documentation to the function
+        # TODO: Raise an error if previous data was already decrypted and not cleared
+
+        # Ensuring the type of 'encrypted_data' is indeed bytes:
+        if type(encrypted_data) != bytes:
+            raise TypeError(f"Expected encrypted data of type bytes, got {type(encrypted_data)} instead")
+
+        # Extract salt, IV, and ciphertext from the encrypted data
+        salt = encrypted_data[:Encryptor.SALT_SIZE]
+        iv = encrypted_data[Encryptor.SALT_SIZE:Encryptor.IV_SIZE]
+        cipher_data = encrypted_data[Encryptor.IV_SIZE:]
+
+        # Deriving the key from the password and salt:
+        key = Encryptor.derive_key(self.__password, salt)
+
+        # Creating a Cipher object using AES in CFB mode with the key and IV:
+        cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=default_backend())
+
+        # Getting a decryptor to perform the decryption:
+        decryptor = cipher.decryptor()
+
+        # Performing the decryption on the ciphertext:
+        padded_data = decryptor.update(cipher_data) + decryptor.finalize()
+
+        # Removing padding:
+        unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+        data = unpadder.update(padded_data) + unpadder.finalize()
+
+        # Saving the data inside the 'decrypted_data' attribute:
+        self.__decrypted_data = data
