@@ -64,13 +64,24 @@ class Decryptor:
             raise TypeError(f'Expected a password of type str, got {type(password)} instead')
         self.__password = password
 
+    def is_decrypted(self) -> bool:
+        """
+        Checks if the Decryptor instance is holding data it had already decrypted, or if it's empty.
+        :return: True if the Decryptor instance holds decrypted data in it, False otherwise.
+        :rtype: bool
+        """
+        return len(self.__decrypted_data) != 0
+
     def decrypt_data(self, encrypted_data: bytes) -> None:
         # TODO: Add documentation to the function
-        # TODO: Raise an error if previous data was already decrypted and not cleared
 
         # Ensuring the type of 'encrypted_data' is indeed bytes:
         if type(encrypted_data) != bytes:
             raise TypeError(f"Expected encrypted data of type bytes, got {type(encrypted_data)} instead")
+
+        # Checking the decryptor doesn't hold any data:
+        if self.is_decrypted():
+            raise DataAlreadyDecryptedException("Cannot decrypt new data until the existing decrypted data is cleared")
 
         # Extract salt, IV, and ciphertext from the encrypted data
         salt = encrypted_data[:Encryptor.SALT_SIZE]
