@@ -72,12 +72,14 @@ class Decryptor:
         """
         return len(self.__decrypted_data) != 0
 
-    def decrypt_data(self, encrypted_data: str | bytes) -> None:
+    def decrypt_data(self, encrypted_data: str | bytes):
         """
         Receives input in the form of bytes or str, and decrypts it. The decrypted result is not returned but saved inside
         the Decryptor instance.
         :param encrypted_data: The encrypted input which will be decrypted and saved in the instance.
         :type encrypted_data: str | bytes
+        :return: The current Decryptor instance to support the builder pattern.
+        :rtype: Decryptor
         """
         # Ensuring the type of 'encrypted_data' is indeed bytes:
         if type(encrypted_data) != bytes and type(encrypted_data) != str:
@@ -114,3 +116,6 @@ class Decryptor:
 
         # Saving the data inside the 'decrypted_data' attribute:
         self.__decrypted_data = data
+
+        # Returning the current Decryptor object to support the builder pattern:
+        return self
