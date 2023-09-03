@@ -72,16 +72,24 @@ class Decryptor:
         """
         return len(self.__decrypted_data) != 0
 
-    def decrypt_data(self, encrypted_data: bytes) -> None:
-        # TODO: Add documentation to the function
-
+    def decrypt_data(self, encrypted_data: str | bytes) -> None:
+        """
+        Receives input in the form of bytes or str, and decrypts it. The decrypted result is not returned but saved inside
+        the Decryptor instance.
+        :param encrypted_data: The encrypted input which will be decrypted and saved in the instance.
+        :type encrypted_data: str | bytes
+        """
         # Ensuring the type of 'encrypted_data' is indeed bytes:
-        if type(encrypted_data) != bytes:
-            raise TypeError(f"Expected encrypted data of type bytes, got {type(encrypted_data)} instead")
+        if type(encrypted_data) != bytes and type(encrypted_data) != str:
+            raise TypeError(f"Expected encrypted data of type bytes or str, got {type(encrypted_data)} instead")
 
         # Checking the decryptor doesn't hold any data:
         if self.is_decrypted():
             raise DataAlreadyDecryptedException("Cannot decrypt new data until the existing decrypted data is cleared")
+
+        # Changing the encrypted data to bytes if it wasn't already:
+        if type(encrypted_data) != bytes:
+            encrypted_data = bytes(encrypted_data)
 
         # Extract salt, IV, and ciphertext from the encrypted data
         salt = encrypted_data[:Encryptor.SALT_SIZE]
