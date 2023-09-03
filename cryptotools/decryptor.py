@@ -119,3 +119,14 @@ class Decryptor:
 
         # Returning the current Decryptor object to support the builder pattern:
         return self
+
+    def decrypt_from_file(self, path: str):
+        """
+        Receives a path to an encrypted binary file, decrypts the content of the file and saves the decrypted data inside
+        the Decryptor instance.
+        :param path: The absolute path to the encrypted binary file. The path MUST be absolute, and the file MUST end in the
+                     extension '.bin'.
+        :type path: str
+        """
+        pass
+        # TODO: Complete the function
