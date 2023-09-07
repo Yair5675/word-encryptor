@@ -387,7 +387,7 @@ class Encryptor:
 
                 # Saving the chunk:
                 chunk_path = os.path.join(dir_path, fr"{CHUNK_NAME.format(chunk_num)}")
-                with open(chunk_path) as chunk_file:
+                with open(chunk_path, 'wb') as chunk_file:
                     chunk_file.write(self.__encrypted_data)
 
                 # Popping the chunk and incrementing chunk_num:
