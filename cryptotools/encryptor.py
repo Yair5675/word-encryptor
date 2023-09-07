@@ -237,7 +237,7 @@ class Encryptor:
         """
         # Checking the type of data:
         if type(data) != str:
-            raise ValueError(f'Expected data of type str, got {type(data)} instead')
+            raise TypeError(f'Expected data of type str, got {type(data)} instead')
 
         # Converting the data to bytes right away:
         data = data.encode('utf-8')
@@ -327,7 +327,7 @@ class Encryptor:
         """
         # Checking the type of the file_path:
         if type(file_path) != str:
-            raise ValueError(f"Expected file path of type str, got {type(file_path)} instead")
+            raise TypeError(f"Expected file path of type str, got {type(file_path)} instead")
         # Checking there is data to write to a file:
         elif self.is_empty():
             raise DataNotLoadedException('Cannot save encrypted data to file because data was cleared or not loaded at all')
@@ -364,7 +364,7 @@ class Encryptor:
 
         # Making sure the path is a string:
         elif type(dir_path) != str:
-            raise ValueError(f'Expected directory path of type string, got {type(dir_path)} instead')
+            raise TypeError(f'Expected directory path of type string, got {type(dir_path)} instead')
 
         # Making sure the path is absolute (and not relative) so encrypted files won't be saved to the package:
         elif not os.path.isabs(dir_path):
