@@ -1,7 +1,8 @@
-from cryptotools.encryptor import Encryptor
+import os
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptotools.encryptor import Encryptor, InvalidEncryptedFileExtensionException
 
 
 ############################################
@@ -120,13 +121,39 @@ class Decryptor:
         # Returning the current Decryptor object to support the builder pattern:
         return self
 
-    def decrypt_from_file(self, path: str):
+    def get_decrypted_data(self) -> bytes:
+        """
+        A method for getting the decrypted data AFTER the decryption process.
+        :return: The decrypted data that is saved inside the instance.
+        :rtype: bytes
+        """
+        # TODO: Check if there is any decrypted data and raise a custom exception if not
+        return self.__decrypted_data
+
+    def decrypt_from_file(self, path: str) -> bytes:
         """
         Receives a path to an encrypted binary file, decrypts the content of the file and saves the decrypted data inside
         the Decryptor instance.
         :param path: The absolute path to the encrypted binary file. The path MUST be absolute, and the file MUST end in the
                      extension '.bin'.
         :type path: str
+        :returns: The decrypted version of the data in the specified file.
+        :rtype: bytes
         """
-        pass
-        # TODO: Complete the function
+        # Check the path:
+        if type(path) != str:
+            raise TypeError(f"Expected path of type str, got {type(path)} instead")
+        if not os.path.isabs(path):
+            raise ValueError(f'The function only accepts absolute paths, yet a relative path was given ({path})')
+        if not os.path.exists(path):
+            raise IOError("The given path to a binary file doesn't exist")
+        if not os.path.isfile(path):
+            raise ValueError(f'The function only decrypts binary files (to encrypt a directory, see "decrypt_from_files")')
+        if not path.endswith('.bin'):
+            raise InvalidEncryptedFileExtensionException("Can only decrypt files ending with '.bin'")
+
+        # Reading the binary data:
+        with open(path, 'rb') as file:
+            data = file.read()
+            # Encrypting the data and returning it:
+            return self.decrypt_data(data).get_decrypted_data()
