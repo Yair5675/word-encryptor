@@ -95,8 +95,8 @@ class Decryptor:
 
         # Extract salt, IV, and ciphertext from the encrypted data
         salt = encrypted_data[:Encryptor.SALT_SIZE]
-        iv = encrypted_data[Encryptor.SALT_SIZE:Encryptor.IV_SIZE]
-        cipher_data = encrypted_data[Encryptor.IV_SIZE:]
+        iv = encrypted_data[Encryptor.SALT_SIZE:Encryptor.SALT_SIZE + Encryptor.IV_SIZE]
+        cipher_data = encrypted_data[Encryptor.SALT_SIZE + Encryptor.IV_SIZE:]
 
         # Deriving the key from the password and salt:
         key = Encryptor.derive_key(self.__password, salt)
