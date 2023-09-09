@@ -81,7 +81,7 @@ class Decryptor:
         """
         return len(self.__decrypted_data) != 0
 
-    def decrypt_data(self, encrypted_data: str | bytes):
+    def decrypt_data(self, encrypted_data):
         """
         Receives input in the form of bytes or str, and decrypts it. The decrypted result is not returned but saved inside
         the Decryptor instance.
