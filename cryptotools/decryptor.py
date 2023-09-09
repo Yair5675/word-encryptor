@@ -1,4 +1,5 @@
 import os
+import re
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -169,7 +170,7 @@ class Decryptor:
         if not os.path.exists(path):
             raise IOError("The given path to a binary file doesn't exist")
         if not os.path.isfile(path):
-            raise ValueError(f'The function only decrypts binary files (to encrypt a directory, see "decrypt_from_files")')
+            raise ValueError(f'The function only decrypts binary files (to encrypt a directory, see "decrypt_from_dir")')
         if not path.endswith('.bin'):
             raise InvalidEncryptedFileExtensionException("Can only decrypt files ending with '.bin'")
 
@@ -178,3 +179,46 @@ class Decryptor:
             data = file.read()
             # Saving the decrypted data in the instance and returning the instance to support the builder pattern:
             return self.decrypt_data(data)
+
+    def decrypt_from_dir(self, dir_path: str) -> bytes:
+        """
+        A generator function used to decrypt data that was encrypted using the Encryptor's 'save_to_files' method, which
+        saves the encrypted data into several files inside one directory. The function receives the path to the directory,
+        decrypts every file one by one and for each the function returns its data.
+        The decrypted data will NOT be saved in the instance.
+        :param dir_path: The absolute path to the directory where all the encrypted binary files are. The path must be
+                         absolute and not relative.
+        :type dir_path: str
+        :returns: The decrypted data inside one of the files in that directory. Since the function is a generator, in order
+                  to get all the data from all files the generator must be iterated over until it has decrypted every file.
+        :rtype: bytes
+        """
+        # Checking the validity of the path:
+        if type(dir_path) != str:
+            raise TypeError(f"Expected path of type str, got {type(dir_path)} instead")
+        if not os.path.isabs(dir_path):
+            raise ValueError(f'The function only accepts absolute paths, yet a relative path was given ({dir_path})')
+        if not os.path.isdir(dir_path):
+            raise ValueError(f'The path should lead to a directory, not a file (to decrypt a file, see "decrypt_from_file")')
+
+        # Creating a function that checks if a file is an encrypted file we're searching for:
+        is_encrypted_file = lambda filename: \
+            (os.path.isfile(os.path.join(dir_path, filename))  # Checking it is a file
+             and re.match(r"^pt_\d+\.bin$", filename) is not None)  # Checking the file name
+
+        # Collecting the valid encrypted files into an array, and sorting them:
+        encrypted_files = sorted(filter(is_encrypted_file, os.listdir(dir_path)))
+
+        # Going over the files:
+        for encrypted_file in encrypted_files:
+            # Saving the previous data in the instance to restore it later:
+            prev_data = self.__decrypted_data
+
+            # Getting the decrypted data from the file:
+            decrypted_data = self.decrypt_from_file(os.path.join(dir_path, encrypted_file)).get_decrypted_data()
+
+            # Restoring the previous data:
+            self.__decrypted_data = prev_data
+
+            # Returning the decrypted data from the file:
+            yield decrypted_data
