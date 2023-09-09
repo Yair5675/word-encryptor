@@ -24,6 +24,14 @@ class DataAlreadyDecryptedException(DecryptorException):
     pass
 
 
+class DataNotDecryptedException(DecryptorException):
+    """
+    An exception for cases where the Decryptor instance is trying to perform an action that requires decrypted data, while
+    no decrypted data is saved in the instance.
+    """
+    pass
+
+
 ###################
 # The class itself:
 ###################
@@ -126,7 +134,8 @@ class Decryptor:
         :return: The decrypted data that is saved inside the instance.
         :rtype: bytes
         """
-        # TODO: Check if there is any decrypted data and raise a custom exception if not
+        if not self.is_decrypted():
+            raise DataNotDecryptedException("No decrypted data is saved inside the instance")
         return self.__decrypted_data
 
     def decrypt_from_file(self, path: str) -> bytes:
