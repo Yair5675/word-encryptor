@@ -138,6 +138,17 @@ class Decryptor:
             raise DataNotDecryptedException("No decrypted data is saved inside the instance")
         return self.__decrypted_data
 
+    def clear_data(self):
+        """
+        Deletes any saved data from the Decryptor instance.
+        :raises DataNotDecryptedException: If no data is saved to delete in the first place.
+        """
+        # Checking there is data to delete:
+        if not self.is_decrypted():
+            raise DataNotDecryptedException("Cannot clear data because no data is saved in the instance")
+        # Clearing the data:
+        self.__decrypted_data = b''
+
     def decrypt_from_file(self, path: str) -> bytes:
         """
         Receives a path to an encrypted binary file, decrypts the content of the file and saves the decrypted data inside
