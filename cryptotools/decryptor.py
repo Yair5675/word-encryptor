@@ -133,6 +133,7 @@ class Decryptor:
         A method for getting the decrypted data AFTER the decryption process.
         :return: The decrypted data that is saved inside the instance.
         :rtype: bytes
+        :raises DataNotDecryptedException: If no data is saved in the Decryptor instance
         """
         if not self.is_decrypted():
             raise DataNotDecryptedException("No decrypted data is saved inside the instance")
