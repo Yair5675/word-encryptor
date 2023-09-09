@@ -219,7 +219,7 @@ class Decryptor:
             prev_data = self.__decrypted_data
 
             # Getting the decrypted data from the file:
-            decrypted_data = self.decrypt_from_file(os.path.join(dir_path, encrypted_file)).get_decrypted_data()
+            decrypted_data = self.clear_data().decrypt_from_file(os.path.join(dir_path, encrypted_file)).get_decrypted_data()
 
             # Restoring the previous data:
             self.__decrypted_data = prev_data
