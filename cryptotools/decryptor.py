@@ -72,7 +72,7 @@ class Decryptor:
             raise TypeError(f'Expected a password of type str, got {type(password)} instead')
         self.__password = password
 
-    def is_decrypted(self) -> bool:
+    def has_data(self) -> bool:
         """
         Checks if the Decryptor instance is holding data it had already decrypted, or if it's empty.
         :return: True if the Decryptor instance holds decrypted data in it, False otherwise.
@@ -94,7 +94,7 @@ class Decryptor:
             raise TypeError(f"Expected encrypted data of type bytes or str, got {type(encrypted_data)} instead")
 
         # Checking the decryptor doesn't hold any data:
-        if self.is_decrypted():
+        if self.has_data():
             raise DataAlreadyDecryptedException("Cannot decrypt new data until the existing decrypted data is cleared")
 
         # Changing the encrypted data to bytes if it wasn't already:
@@ -135,7 +135,7 @@ class Decryptor:
         :rtype: bytes
         :raises DataNotDecryptedException: If no data is saved in the Decryptor instance
         """
-        if not self.is_decrypted():
+        if not self.has_data():
             raise DataNotDecryptedException("No decrypted data is saved inside the instance")
         return self.__decrypted_data
 
@@ -145,7 +145,7 @@ class Decryptor:
         :raises DataNotDecryptedException: If no data is saved to delete in the first place.
         """
         # Checking there is data to delete:
-        if not self.is_decrypted():
+        if not self.has_data():
             raise DataNotDecryptedException("Cannot clear data because no data is saved in the instance")
         # Clearing the data:
         self.__decrypted_data = b''
