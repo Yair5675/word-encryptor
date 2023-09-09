@@ -16,13 +16,12 @@ class DecryptorException(Exception):
         super().__init__(message)
 
 
-class DataAlreadyDecryptedException(Exception):
+class DataAlreadyDecryptedException(DecryptorException):
     """
     An exception for cases where the Decryptor instance is trying to perform an action that requires the data to not be
     decrypted, while it had already been decrypted.
     """
-    def __init__(self, message):
-        super().__init__(message)
+    pass
 
 
 ###################
