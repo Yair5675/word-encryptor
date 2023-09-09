@@ -150,15 +150,16 @@ class Decryptor:
         # Clearing the data:
         self.__decrypted_data = b''
 
-    def decrypt_from_file(self, path: str) -> bytes:
+    def decrypt_from_file(self, path: str):
         """
         Receives a path to an encrypted binary file, decrypts the content of the file and saves the decrypted data inside
-        the Decryptor instance.
+        the Decryptor instance. Pay attention the function DOES NOT return the decrypted data, but only saves it in the
+        instance.
         :param path: The absolute path to the encrypted binary file. The path MUST be absolute, and the file MUST end in the
                      extension '.bin'.
         :type path: str
-        :returns: The decrypted version of the data in the specified file.
-        :rtype: bytes
+        :return: The current Decryptor instance to support the builder pattern.
+        :rtype: Decryptor
         """
         # Check the path:
         if type(path) != str:
@@ -175,5 +176,5 @@ class Decryptor:
         # Reading the binary data:
         with open(path, 'rb') as file:
             data = file.read()
-            # Encrypting the data and returning it:
-            return self.decrypt_data(data).get_decrypted_data()
+            # Saving the decrypted data in the instance and returning the instance to support the builder pattern:
+            return self.decrypt_data(data)
