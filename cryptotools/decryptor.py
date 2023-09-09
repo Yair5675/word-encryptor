@@ -143,6 +143,8 @@ class Decryptor:
     def clear_data(self):
         """
         Deletes any saved data from the Decryptor instance.
+        :returns: The current Decryptor instance in order to support the builder pattern.
+        :rtype: Decryptor
         :raises DataNotDecryptedException: If no data is saved to delete in the first place.
         """
         # Checking there is data to delete:
@@ -150,6 +152,8 @@ class Decryptor:
             raise DataNotDecryptedException("Cannot clear data because no data is saved in the instance")
         # Clearing the data:
         self.__decrypted_data = b''
+        # Returning the Decryptor instance to support the builder pattern:
+        return self
 
     def decrypt_from_file(self, path: str):
         """
