@@ -327,12 +327,37 @@ class Encryptor:
         :raises InvalidEncryptedFileExtensionException: If the file to which the data will be written to doesn't end with the
                                                         '.bin' file extension.
         """
+        # Validate path:
+        self.__validate_file_path(file_path)
+
+        # Saving the data to the specified file:
+        with open(file_path, 'wb') as file:
+            file.write(self.__encrypted_data)
+
+    def __validate_file_path(self, file_path: str) -> None:
+        """
+        A utility function whose purpose is to validate the path given to the 'save_to_file' method.
+        The function checks the following:
+            1) The type of file_path is str.
+            2) The encryptor object is not empty (i.e: there is data to write to a file).
+            3) The data inside the encryptor object is encrypted (or more precisely, one chunk is encrypted).
+            4) The path given is an absolute path.
+            5) The path ends with the '.bin' extension.
+        If any of these requirements are not met, the function will raise an appropriate exception.
+        :param file_path: The path parameter which will be validated.
+        :raises ValueError: If the given path isn't an absolute path.
+        :raises DataNotLoadedException: If no data is saved in the instance.
+        :raises DataNotEncryptedException: If the data saved in the instance was not encrypted prior to the function call.
+        :raises InvalidEncryptedFileExtensionException: If the file to which the data will be written to doesn't end with the
+                                                        '.bin' file extension.
+        """
         # Checking the type of the file_path:
         if type(file_path) != str:
             raise TypeError(f"Expected file path of type str, got {type(file_path)} instead")
         # Checking there is data to write to a file:
         elif self.is_empty():
-            raise DataNotLoadedException('Cannot save encrypted data to file because data was cleared or not loaded at all')
+            raise DataNotLoadedException(
+                'Cannot save encrypted data to file because data was cleared or not loaded at all')
         # Checking if the data wasn't encrypted:
         elif not self.is_encrypted():
             raise DataNotEncryptedException('Data must be encrypted before being saved to a file')
@@ -342,10 +367,6 @@ class Encryptor:
         # Checking that the file path ends with the '.bin' extension:
         elif not file_path.endswith('.bin'):
             raise InvalidEncryptedFileExtensionException("Can only save encrypted data to files ending with '.bin'")
-
-        # Saving the data to the specified file:
-        with open(file_path, 'wb') as file:
-            file.write(self.__encrypted_data)
 
     def save_to_files(self, dir_path: str) -> None:
         """
