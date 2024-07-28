@@ -330,27 +330,68 @@ class Encryptor:
         # Returning the current Encryptor instance to support the builder pattern:
         return self
 
-    def save_to_file(self, file_path: str):
+    def save_to_file(self, file_path: str, all_chunks: bool = True) -> None:
         """
-        Writes the encrypted data into a binary file (ends with '.bin'). Pay attention only the first chunk of raw data will
-        be encrypted, and not necessarily the entire saved data (for that, see 'save_to_files'). Pay attention that in
-        contrast to the 'save_to_files' function, the current function does not delete any data saved in the instance, and
-        the current encrypted chunk will still be saved in the instance after it is written to the specified path. The path
-        of the file must be an ABSOLUTE path to the location where the chunk will be saved.
-        :param file_path: The absolute path to the location where the encrypted data will be saved, ending in the file's name
-                          and the '.bin' file extension.
+        Encrypts the raw data stored in the instance and saves it into a binary file (ends with '.bin').
+
+        By default, all data chunks stored in the instance will be saved into a single file. If the data is extremely
+        large, setting `all_chunks=False` will save only the first chunk.
+
+        Example: `save_to_file('/path/to/file.bin', all_chunks=False)`
+
+        Note that this function does not modify the instance's data; it only saves a copy of the encrypted data to the
+        specified file.
+        Although all chunks are encrypted temporarily for saving, this function does not change the encryption state of
+        the instance. If `is_encrypted` was False before calling this method, it will still be False after the method
+        call.
+
+        :param file_path: The absolute path to the location where the encrypted data will be saved, ending in the file's
+                          name and the '.bin' file extension. The file path must end with the '.bin' extension.
+        :type file_path: str
+        :param all_chunks: An optional parameter that informs the encryptor whether to encrypt all raw data in the
+                           instance and save the result in a file or only encrypt one chunk of the data.
+                           Default value is True, meaning all the data will be encrypted and saved. However, for large
+                           amounts of data it may be more desirable to change the value to False, saving only a chunk.
+        :type all_chunks: bool
         :raises ValueError: If the given path isn't an absolute path.
-        :raises DataNotLoadedException: If no data is saved in the instance.
-        :raises DataNotEncryptedException: If the data saved in the instance was not encrypted prior to the function call.
+        :raises DataNotLoadedException: If no data is loaded in the instance.
         :raises InvalidEncryptedFileExtensionException: If the file to which the data will be written to doesn't end with the
                                                         '.bin' file extension.
         """
         # Validate path:
         self.__validate_file_path(file_path)
 
-        # Saving the data to the specified file:
+        # Save the currently encrypted data (first chunk) and create a deque that will save the chunks:
+        original_encrypted = self.__encrypted_data
+        original_raw = deque()
+
+        # Encrypt the first chunk if it isn't encrypted:
+        if not self.is_encrypted():
+            self.encrypt_data()
+
+        # Save the first chunk anyway:
         with open(file_path, 'wb') as file:
             file.write(self.__encrypted_data)
+
+        # Exit if the all_chunks flag is off (restore previous state):
+        if not all_chunks:
+            self.__encrypted_data = original_encrypted
+            return
+
+        # Clear the previous chunk (but save it in the deque):
+        original_raw.append(self.pop_chunk())  # This also deletes encrypted data saved
+
+        # Open the file:
+        with open(file_path, 'wb') as file:
+            # Go over every chunk, encrypt it, save it in the file and then save in the deque:
+            while not self.is_empty():
+                self.encrypt_data()
+                file.write(self.__encrypted_data)
+                original_raw.append(self.pop_chunk())
+
+        # Restore the raw data and the initial encrypted data:
+        self.__encrypted_data = original_encrypted
+        self.__raw_data = original_raw
 
     def __validate_file_path(self, file_path: str) -> None:
         """
@@ -358,16 +399,14 @@ class Encryptor:
         The function checks the following:
             1) The type of file_path is str.
             2) The encryptor object is not empty (i.e: there is data to write to a file).
-            3) The data inside the encryptor object is encrypted (or more precisely, one chunk is encrypted).
-            4) The path given is an absolute path.
-            5) The path ends with the '.bin' extension.
+            3) The path given is an absolute path.
+            4) The path ends with the '.bin' extension.
         If any of these requirements are not met, the function will raise an appropriate exception.
         :param file_path: The path parameter which will be validated.
         :raises ValueError: If the given path isn't an absolute path.
         :raises DataNotLoadedException: If no data is saved in the instance.
-        :raises DataNotEncryptedException: If the data saved in the instance was not encrypted prior to the function call.
-        :raises InvalidEncryptedFileExtensionException: If the file to which the data will be written to doesn't end with the
-                                                        '.bin' file extension.
+        :raises InvalidEncryptedFileExtensionException: If the file to which the data will be written to doesn't end
+                                                        with the '.bin' file extension.
         """
         # Checking the type of the file_path:
         if type(file_path) != str:
@@ -375,10 +414,8 @@ class Encryptor:
         # Checking there is data to write to a file:
         elif self.is_empty():
             raise DataNotLoadedException(
-                'Cannot save encrypted data to file because data was cleared or not loaded at all')
-        # Checking if the data wasn't encrypted:
-        elif not self.is_encrypted():
-            raise DataNotEncryptedException('Data must be encrypted before being saved to a file')
+                'Cannot save encrypted data to file because data was cleared or not loaded at all'
+            )
         # Checking that the file path is absolute:
         elif not os.path.isabs(file_path):
             raise ValueError(f'The function only accepts absolute paths, yet a relative path was given ({file_path})')
