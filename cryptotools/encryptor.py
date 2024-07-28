@@ -1,4 +1,5 @@
 import os
+from typing import Union
 from collections import deque
 from cryptography.hazmat.primitives import hashes, padding
 from cryptography.hazmat.backends import default_backend
@@ -223,12 +224,12 @@ class Encryptor:
         # Returning the current Encryptor instance to support the builder pattern:
         return self
 
-    def enter_data(self, data: str):
+    def enter_data(self, data: Union[str, bytes]):
         """
         Enters new data to the encryptor. If the data stored in the encryptor is already encrypted, an error will be raised.
         If the data given is too large to be added to the last chunk of saved data, it will be split into smaller chunks that
         will be added to the encryptor. Notice the 'encrypt' method will only encrypt the first chunk that was entered.
-        :param data: A new string of data that will be saved in the instance and be encrypted in the future using the
+        :param data: A new piece of data that will be saved in the instance and be encrypted in the future using the
                      'encrypt' function.
         :returns: The current Encryptor instance. This way chaining multiple different methods together is doable.
         :rtype: Encryptor
@@ -236,15 +237,16 @@ class Encryptor:
                                                encrypted.
         """
         # Checking the type of data:
-        if type(data) != str:
-            raise TypeError(f'Expected data of type str, got {type(data)} instead')
-
-        # Converting the data to bytes right away:
-        data = data.encode('utf-8')
+        if not isinstance(data, (str, bytes)):
+            raise TypeError(f'Expected data of type str or bytes, got {type(data)} instead')
 
         # Checking if the data was already encrypted:
         if self.is_encrypted():
             raise DataAlreadyEncryptedException('Cannot change the pure data in the Encryptor as it was already encrypted')
+
+        # Converting the data to bytes if a string was given:
+        if isinstance(data, str):
+            data = data.encode('utf-8')
 
         # Getting the last data chunk saved:
         last_chunk = self.__raw_data.pop() if self.__raw_data else b''  # Make sure to check the raw data isn't empty
