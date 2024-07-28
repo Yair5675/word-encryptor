@@ -68,6 +68,10 @@ class Encryptor:
     only this chunk will be available. To proceed to the next chunk, use the 'pop_chunk' method to remove the non-encrypted
     chunk (which will also be returned).
     """
+
+    ######################
+    # Instance attributes:
+    ######################
     __slots__ = [
         '__key',  # The key which will primarily decide how the data will be encrypted. It is based on the password given
                   # inside the constructor.
@@ -86,14 +90,28 @@ class Encryptor:
                             # result in encrypted data whose size is less than the maximum size specified in the constructor.
         ]
 
-    # Constants in the class:
-    MINIMUM_ENCRYPTION_SIZE = 1024 * 1024  # The minimum amount of bytes that is allocated to the encryption.
+    #############
+    # Constants:
+    #############
 
-    IV_SIZE = 16  # The amount of bytes that will be dedicated to the initialization vector during the encryption.
-    SALT_SIZE = 32  # The amount of bytes that will be dedicated to the salt
+    # The minimum amount of bytes that is allocated to the encryption:
+    MINIMUM_ENCRYPTION_SIZE = 1024 * 1024
 
-    __KEY_LENGTH = 32  # The amount of bytes the key will be made of (multiply by 8 to get the amount of bits)
-    __KEY_ITERATIONS = 100000  # Number of iteration to create the encryption key (higher is more secure but slower)
+    # The amount of bytes that will be dedicated to the initialization vector during the encryption:
+    IV_SIZE = 16
+
+    # The name of an individual encrypted file when encrypting multiple chunks (brackets are placeholder
+    # for chunk number):
+    CHUNK_NAME = 'pt_{}.bin'
+
+    # The amount of bytes that will be dedicated to the salt:
+    SALT_SIZE = 32
+
+    # The amount of bytes the key will be made of (multiply by 8 to get the amount of bits):
+    __KEY_LENGTH = 32
+
+    # Number of iteration to create the encryption key (higher is more secure but slower):
+    __KEY_ITERATIONS = 100000
 
     def __init__(self, password: str, max_encryption_size: int = MINIMUM_ENCRYPTION_SIZE):
         """
@@ -393,10 +411,8 @@ class Encryptor:
         elif not os.path.isabs(dir_path):
             raise ValueError(f'The function only accepts absolute paths, yet a relative path was given ({dir_path})')
 
-        # The name of an individual encrypted file (brackets are the number):
-        CHUNK_NAME = 'pt_{}.bin'
         # The current chunk number:
-        chunk_num = 1
+        chunk_num = 0
         # A variable for any IO exception that may arise:
         io_error = None
 
@@ -409,7 +425,7 @@ class Encryptor:
                     self.encrypt_data()
 
                 # Saving the chunk:
-                chunk_path = os.path.join(dir_path, fr"{CHUNK_NAME.format(chunk_num)}")
+                chunk_path = os.path.join(dir_path, fr"{Encryptor.CHUNK_NAME.format(chunk_num)}")
                 with open(chunk_path, 'wb') as chunk_file:
                     chunk_file.write(self.__encrypted_data)
 
@@ -419,12 +435,9 @@ class Encryptor:
 
         # If an error occurred:
         except IOError as ioe:
-            # Clear any files that were created:
-            for file_num in range(chunk_num, 0, -1):
-                path_to_remove = os.path.join(dir_path, fr"{CHUNK_NAME.format(file_num)}")
-                if os.path.exists(path_to_remove) and os.path.isfile(path_to_remove):
-                    os.remove(path_to_remove)
-            # Saving the exception (not raising it now because the raw data must be cleared first):
+            # Clear saved chunks:
+            Encryptor.__delete_unfinished_files(dir_path, chunk_num)
+            # Save the error:
             io_error = ioe
         finally:
             # Clear the data if it isn't cleared already:
@@ -434,6 +447,25 @@ class Encryptor:
             # Raise the io exception if one was caught:
             if io_error is not None:
                 raise io_error
+
+    @staticmethod
+    def __delete_unfinished_files(dir_path: str, chunks_saved: int) -> None:
+        """
+        When using the "save_to_files" method, and IO exception could be thrown while file creation is still
+        in progress. In such case, all previously created files (parts of the encryption) will be removed,
+        since the complete data was not successfully encrypted.
+        This method is responsible for the deletion of such files.
+        :param dir_path: The absolute path to the directory where the chunks were saved.
+        :param chunks_saved: The amount of chunks successfully saved prior to the IO exception.
+        """
+        # Loop over the files and delete them:
+        for chunk_num in range(chunks_saved + 1):
+            # Get path to the current file:
+            path_to_remove = os.path.join(dir_path, fr"{Encryptor.CHUNK_NAME.format(chunk_num)}")
+
+            # Make sure the file exists (and is in fact a file):
+            if os.path.exists(path_to_remove) and os.path.isfile(path_to_remove):
+                os.remove(path_to_remove)
 
     @staticmethod
     def __calc_raw_data_size(encrypted_data_size: int) -> int:
