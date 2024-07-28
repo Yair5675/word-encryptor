@@ -415,19 +415,6 @@ class Encryptor:
                 raise io_error
 
     @staticmethod
-    def __calc_encrypted_data_size(raw_data_size: int) -> int:
-        """
-        Given the size of the raw data, the function calculates the future size of the encrypted data, with an added safety
-        margin.
-        :param raw_data_size: The size of the raw data (data before encryption).
-        :return: The future size of the data after encryption.
-        """
-        # Adding a safety margin (just to be safe the prediction will be larger than the actual result):
-        safety_margin = 64
-        # Through experiments, the correlation between raw len and encrypted len is: encrypted = raw + 64
-        return raw_data_size + 64 + safety_margin
-
-    @staticmethod
     def __calc_raw_data_size(encrypted_data_size: int) -> int:
         """
         Given the size of the encrypted data, the function calculates the size of the raw data that was encrypted.
