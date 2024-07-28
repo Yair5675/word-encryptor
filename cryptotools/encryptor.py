@@ -187,6 +187,16 @@ class Encryptor:
         """
         return len(self.__encrypted_data) != 0
 
+    def clear_encryption(self) -> None:
+        """
+        The method deletes the encryption of raw data saved in the instance without deleting the raw data.
+
+        Some methods require the instance to hold no encrypted data upon calling them. Sometimes popping
+        the first chunk is needed, but if only the encryption needs to be removed yet the raw data doesn't,
+        this method should be called.
+        """
+        self.__encrypted_data = b''
+
     def pop_chunk(self) -> bytes:
         """
         Clears the first saved chunk in the encryptor (the first chunk will be the oldest chunk of data that was not
