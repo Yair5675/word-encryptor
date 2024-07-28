@@ -124,20 +124,6 @@ class Encryptor:
                                     larger if specified.
         :type max_encryption_size: int
         :rtype: Encryptor
-
-        Code examples:
-            >>> # Properly instantiating an Encryptor with default max encryption size:
-            >>> encryptor = Encryptor('password123')
-            >>> # Properly instantiating an Encryptor with a custom max encryption size:
-            >>> encryptor = Encryptor('password123', max_encryption_size=3*1024*1024)  # 3*1024*1024 = 3145728 bytes = 3 MB
-
-            >>> # Instantiating an object with an invalid password or max encryption size types:
-            >>> encryptor = Encryptor(password=1234)  # Will result in TypeError
-            >>> encryptor = Encryptor('password123', max_encryption_size='10002')  # Will result in TypeError
-
-            >>> # Instantiating an object with an invalid value for the max encryption size:
-            >>> encryptor = Encryptor('password123', max_encryption_size=-100)  # Will result in ValueError
-            >>> encryptor = Encryptor('password123', max_encryption_size=Encryptor.MINIMUM_ENCRYPTION_SIZE - 1)  # Will result in ValueError
         """
         # Ensuring type safety for the password:
         if type(password) != str:
@@ -203,8 +189,9 @@ class Encryptor:
 
     def pop_chunk(self) -> bytes:
         """
-        Clears the first saved chunk in the encryptor (the first chunk will be the oldest chunk of data that was not cleared
-        prior to the function call) and returns it.
+        Clears the first saved chunk in the encryptor (the first chunk will be the oldest chunk of data that was not
+        cleared prior to the function call) and returns it.
+        Calling the method will also clear the encrypted data saved in the instance (if there was one).
         :return: The raw data chunk that was removed from the encryptor.
         :rtype: bytes
         :raises DataNotLoadedException: If the instance doesn't hold any data to be cleared.
@@ -224,7 +211,7 @@ class Encryptor:
 
     def clear_data(self):
         """
-        Clears the all data saved in the instance.
+        Clears the all data saved in the instance. This includes both raw data and data already encrypted.
         :returns: The current Encryptor instance. This way chaining multiple different methods together is doable.
         :rtype: Encryptor
         :raises DataNotLoadedException: If the encryptor was already cleared prior to the function call.
