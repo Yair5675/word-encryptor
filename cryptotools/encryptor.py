@@ -135,17 +135,17 @@ class Encryptor:
                              f'{Encryptor.MINIMUM_ENCRYPTION_SIZE // (1024 * 1024)} MB ({Encryptor.MINIMUM_ENCRYPTION_SIZE}'
                              f' bytes)')
         # Calculating the max chunk size:
-        self.__max_chunk_size = Encryptor.__calc_raw_data_size(max_encryption_size)
+        self.__max_chunk_size: int = Encryptor.__calc_raw_data_size(max_encryption_size)
 
         # Generate random salt bytes for the encryption:
-        self.__salt = os.urandom(Encryptor.SALT_SIZE)
+        self.__salt: bytes = os.urandom(Encryptor.SALT_SIZE)
         # Derive key:
-        self.__key = Encryptor.derive_key(password, self.__salt)
+        self.__key: bytes = Encryptor.derive_key(password, self.__salt)
 
         # Initializing the encrypted data:
-        self.__encrypted_data = b''
+        self.__encrypted_data: bytes = b''
         # Initializing the raw data:
-        self.__raw_data = deque()
+        self.__raw_data: deque[bytes] = deque()
 
     def is_empty(self) -> bool:
         """
