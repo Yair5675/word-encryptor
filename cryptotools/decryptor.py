@@ -135,7 +135,8 @@ class Decryptor:
         # Returning the current Decryptor object to support the builder pattern:
         return self
 
-    def get_decrypted_data(self) -> bytes:
+    @property
+    def decrypted_data(self) -> bytes:
         """
         A method for getting the decrypted data AFTER the decryption process.
         :return: The decrypted data that is saved inside the instance.
@@ -225,7 +226,7 @@ class Decryptor:
             prev_data = self.__decrypted_data
 
             # Getting the decrypted data from the file:
-            decrypted_data = self.clear_data().decrypt_from_file(os.path.join(dir_path, encrypted_file)).get_decrypted_data()
+            decrypted_data = self.clear_data().decrypt_from_file(os.path.join(dir_path, encrypted_file)).decrypted_data
 
             # Restoring the previous data:
             self.__decrypted_data = prev_data
