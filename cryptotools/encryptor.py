@@ -101,10 +101,6 @@ class Encryptor:
     # The amount of bytes that will be dedicated to the initialization vector during the encryption:
     IV_SIZE = 16
 
-    # The name of an individual encrypted file when encrypting multiple chunks (brackets are placeholder
-    # for chunk number):
-    CHUNK_NAME = 'pt_{}.bin'
-
     # The amount of bytes that will be dedicated to the salt:
     SALT_SIZE = 32
 
