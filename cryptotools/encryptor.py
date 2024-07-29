@@ -305,24 +305,8 @@ class Encryptor:
         elif self.is_encrypted():
             raise DataAlreadyEncryptedException('Cannot re-encrypt data after it was encrypted')
 
-        # Padding the data to match the block size of the AES algorithm:
-        padder = padding.PKCS7(algorithms.AES.block_size).padder()
-        padded_data = padder.update(self.__raw_data[0]) + padder.finalize()  # Encrypting only the first chunk of data
-
-        # Generate a random IV (Initialization Vector) for the encryption:
-        iv = os.urandom(Encryptor.IV_SIZE)
-
-        # Create a Cipher object using AES in CFB mode with the key and IV:
-        cipher = Cipher(algorithms.AES(self.__key), modes.CFB(iv), backend=default_backend())
-
-        # Get an encryptor to perform the encryption:
-        encryptor = cipher.encryptor()
-
-        # Perform the encryption on the padded data:
-        cipher_data = encryptor.update(padded_data) + encryptor.finalize()
-
-        # Save the encrypted data as a concatenation of salt, IV and cipher_data:
-        self.__encrypted_data = self.__salt + iv + cipher_data
+        # Encrypt the first chunk of raw data:
+        self.__encrypted_data = Encryptor.__encrypt_data(self.__raw_data[0], self.__key, self.__salt)
 
         # Returning the current Encryptor instance to support the builder pattern:
         return self
@@ -375,6 +359,11 @@ class Encryptor:
             self.__encrypted_data = original_encrypted
             return
 
+        # TODO: This method is wrong. IT inputs the salt and IV every time for every chunk, when in fact
+        #  it should only do it once for the whole file. Create a utility method to encrypt an arbitrary
+        #  amount of data to do so. Use it here (for the entire raw data) and in the "encrypt_data" method
+        #  (only for the first chunk there).
+
         # Clear the previous chunk (but save it in the deque):
         original_raw.append(self.pop_chunk())  # This also deletes encrypted data saved
 
@@ -419,6 +408,34 @@ class Encryptor:
         # Checking that the file path ends with the '.bin' extension:
         elif not file_path.endswith('.bin'):
             raise InvalidEncryptedFileExtensionException("Can only save encrypted data to files ending with '.bin'")
+
+    @staticmethod
+    def __encrypt_data(data: bytes, key: bytes, salt: bytes) -> bytes:
+        """
+        Encrypts raw data using a key and salt.
+        :param data: The raw data that will be encrypted.
+        :param key: A key influencing how the data will be encrypted. It is usually based on a password.
+        :param salt: A random collection of bytes to improve the security of the encryption.
+        :return: The given data encrypted.
+        """
+        # Padding the data to match the block size of the AES algorithm:
+        padder = padding.PKCS7(algorithms.AES.block_size).padder()
+        padded_data = padder.update(data) + padder.finalize()
+
+        # Generate a random IV (Initialization Vector) for the encryption:
+        iv = os.urandom(Encryptor.IV_SIZE)
+
+        # Create a Cipher object using AES in CFB mode with the key and IV:
+        cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=default_backend())
+
+        # Get an encryptor to perform the encryption:
+        encryptor = cipher.encryptor()
+
+        # Perform the encryption on the padded data:
+        cipher_data = encryptor.update(padded_data) + encryptor.finalize()
+
+        # Return the encrypted data as a concatenation of salt, IV and cipher_data:
+        return salt + iv + cipher_data
 
     @staticmethod
     def __calc_raw_data_size(encrypted_data_size: int) -> int:
