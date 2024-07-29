@@ -1,5 +1,6 @@
 import os
 import re
+from typing import Union
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -57,10 +58,10 @@ class Decryptor:
         :rtype: Decryptor
         """
         # Setting the password:
-        self.password = password
+        self.password: str = password
 
         # Setting the decrypted data to an empty bytes object:
-        self.__decrypted_data = b''
+        self.__decrypted_data: bytes = b''
 
     @property
     def password(self) -> str:
@@ -87,17 +88,16 @@ class Decryptor:
         """
         return len(self.__decrypted_data) != 0
 
-    def decrypt_data(self, encrypted_data):
+    def decrypt_data(self, encrypted_data: Union[bytes, str]) -> 'Decryptor':
         """
         Receives input in the form of bytes or str, and decrypts it. The decrypted result is not returned but saved inside
         the Decryptor instance.
         :param encrypted_data: The encrypted input which will be decrypted and saved in the instance.
-        :type encrypted_data: str | bytes
         :return: The current Decryptor instance to support the builder pattern.
         :rtype: Decryptor
         """
         # Ensuring the type of 'encrypted_data' is indeed bytes:
-        if type(encrypted_data) != bytes and type(encrypted_data) != str:
+        if not isinstance(encrypted_data, (bytes, str)):
             raise TypeError(f"Expected encrypted data of type bytes or str, got {type(encrypted_data)} instead")
 
         # Checking the decryptor doesn't hold any data:
@@ -147,7 +147,7 @@ class Decryptor:
             raise DataNotDecryptedException("No decrypted data is saved inside the instance")
         return self.__decrypted_data
 
-    def clear_data(self):
+    def clear_data(self) -> 'Decryptor':
         """
         Deletes any saved data from the Decryptor instance.
         :returns: The current Decryptor instance in order to support the builder pattern.
@@ -162,7 +162,7 @@ class Decryptor:
         # Returning the Decryptor instance to support the builder pattern:
         return self
 
-    def decrypt_from_file(self, path: str):
+    def decrypt_from_file(self, path: str) -> 'Decryptor':
         """
         Receives a path to an encrypted binary file, decrypts the content of the file and saves the decrypted data inside
         the Decryptor instance. Pay attention the function DOES NOT return the decrypted data, but only saves it in the
