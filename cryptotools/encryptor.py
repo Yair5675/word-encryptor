@@ -174,7 +174,7 @@ class Encryptor:
             raise DataNotLoadedException('Cannot retrieve encrypted data which was cleared or not loaded at all')
         # Making sure the data is encrypted before we return it:
         if not self.is_encrypted():
-            self.encrypt_data()
+            self.encrypt_chunk()
 
         # Return the encrypted data of the current chunk (without removing it):
         return self.__encrypted_data
@@ -286,7 +286,7 @@ class Encryptor:
         # Returning the current Encryptor instance to support the builder pattern:
         return self
 
-    def encrypt_data(self):
+    def encrypt_chunk(self):
         """
         Encrypts the data that was loaded to the Encryptor instance. The function only encrypts the first chunk saved in the
         encryptor (the oldest chunk that wasn't cleared). To encrypt the rest of the chunks, the current chunk will have to
