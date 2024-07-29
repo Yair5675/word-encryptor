@@ -57,21 +57,27 @@ class Decryptor:
         :rtype: Decryptor
         """
         # Setting the password:
-        self.set_password(password)
+        self.password = password
+
         # Setting the decrypted data to an empty bytes object:
         self.__decrypted_data = b''
 
-    def set_password(self, password: str):
+    @property
+    def password(self) -> str:
+        return self.__password
+
+    @password.setter
+    def password(self, new_password: str):
         """
         A setter method for the password inside the Decryptor class.
-        :param password: A piece of string that was used in the encryption process to derive an encryption key. It will be
+        :param new_password: A piece of string that was used in the encryption process to derive an encryption key. It will be
                          used in the decryption process as well.
-        :type password: str
+        :type new_password: str
         """
         # Ensuring type safety for the password:
-        if type(password) != str:
-            raise TypeError(f'Expected a password of type str, got {type(password)} instead')
-        self.__password = password
+        if type(new_password) != str:
+            raise TypeError(f'Expected a password of type str, got {type(new_password)} instead')
+        self.__password = new_password
 
     def has_data(self) -> bool:
         """
