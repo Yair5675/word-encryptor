@@ -1,5 +1,6 @@
 import os
 from typing import Union
+from functools import reduce
 from collections import deque
 from cryptography.hazmat.primitives import hashes, padding
 from cryptography.hazmat.backends import default_backend
@@ -342,42 +343,16 @@ class Encryptor:
         # Validate path:
         self.__validate_file_path(file_path)
 
-        # Save the currently encrypted data (first chunk) and create a deque that will save the chunks:
-        original_encrypted = self.__encrypted_data
-        original_raw = deque()
+        # Get the raw data that needs to be encrypted as bytes (whether it is a single chunk or all
+        # of them):
+        raw_data = reduce(lambda x, y: x + y, self.__raw_data, b'') if all_chunks else self.__raw_data[0]
 
-        # Encrypt the first chunk if it isn't encrypted:
-        if not self.is_encrypted():
-            self.encrypt_data()
+        # Encrypt the data:
+        encrypted_data = Encryptor.__encrypt_data(raw_data, self.__key, self.__salt)
 
-        # Save the first chunk anyway:
+        # Save to file:
         with open(file_path, 'wb') as file:
-            file.write(self.__encrypted_data)
-
-        # Exit if the all_chunks flag is off (restore previous state):
-        if not all_chunks:
-            self.__encrypted_data = original_encrypted
-            return
-
-        # TODO: This method is wrong. IT inputs the salt and IV every time for every chunk, when in fact
-        #  it should only do it once for the whole file. Create a utility method to encrypt an arbitrary
-        #  amount of data to do so. Use it here (for the entire raw data) and in the "encrypt_data" method
-        #  (only for the first chunk there).
-
-        # Clear the previous chunk (but save it in the deque):
-        original_raw.append(self.pop_chunk())  # This also deletes encrypted data saved
-
-        # Open the file:
-        with open(file_path, 'wb') as file:
-            # Go over every chunk, encrypt it, save it in the file and then save in the deque:
-            while not self.is_empty():
-                self.encrypt_data()
-                file.write(self.__encrypted_data)
-                original_raw.append(self.pop_chunk())
-
-        # Restore the raw data and the initial encrypted data:
-        self.__encrypted_data = original_encrypted
-        self.__raw_data = original_raw
+            file.write(encrypted_data)
 
     def __validate_file_path(self, file_path: str) -> None:
         """
