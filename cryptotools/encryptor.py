@@ -1,6 +1,5 @@
 import os
 from typing import Union
-from functools import reduce
 from collections import deque
 from cryptography.hazmat.primitives import hashes, padding
 from cryptography.hazmat.backends import default_backend
@@ -341,7 +340,7 @@ class Encryptor:
 
         # Get the raw data that needs to be encrypted as bytes (whether it is a single chunk or all
         # of them):
-        raw_data = reduce(lambda x, y: x + y, self.__raw_data, b'') if all_chunks else self.__raw_data[0]
+        raw_data = b''.join(self.__raw_data) if all_chunks else self.__raw_data[0]
 
         # Encrypt the data:
         encrypted_data = Encryptor.__encrypt_data(raw_data, self.__key, self.__salt)
