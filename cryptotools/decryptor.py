@@ -137,13 +137,10 @@ class Decryptor:
     @property
     def decrypted_data(self) -> bytes:
         """
-        A method for getting the decrypted data AFTER the decryption process.
+        The decrypted data saved in the instance.
         :return: The decrypted data that is saved inside the instance.
         :rtype: bytes
-        :raises DataNotDecryptedException: If no data is saved in the Decryptor instance
         """
-        if not self.has_data():
-            raise DataNotDecryptedException("No decrypted data is saved inside the instance")
         return self.__decrypted_data
 
     def clear_data(self) -> 'Decryptor':
