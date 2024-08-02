@@ -291,8 +291,8 @@ class Encryptor:
         :returns: The current Encryptor instance. This way chaining multiple different methods together is doable.
         :rtype: Encryptor
         :raises DataAlreadyEncryptedException: If the current data in the Encryptor instance was already encrypted.
-        :raises DataNotLoadedException: If no data was given to the Encryptor instance prior to the function's call, or if it
-                                        was cleared.
+        :raises DataNotLoadedException: If no data was given to the Encryptor instance prior to the function's call, or
+                                        if it was cleared.
         """
         # Checking if there is any data to encrypt:
         if self.is_empty():
@@ -338,6 +338,12 @@ class Encryptor:
         # Validate path:
         self.__validate_file_path(file_path)
 
+        # Check there is data to write to a file:
+        if self.is_empty():
+            raise DataNotLoadedException(
+                'Cannot save encrypted data to file because data was cleared or not loaded at all'
+            )
+
         # Get the raw data that needs to be encrypted as bytes (whether it is a single chunk or all
         # of them):
         raw_data = b''.join(self.__raw_data) if all_chunks else self.__raw_data[0]
@@ -349,29 +355,23 @@ class Encryptor:
         with open(file_path, 'wb') as file:
             file.write(encrypted_data)
 
-    def __validate_file_path(self, file_path: str) -> None:
+    @staticmethod
+    def __validate_file_path(file_path: str) -> None:
         """
         A utility function whose purpose is to validate the path given to the 'save_to_file' method.
         The function checks the following:
             1) The type of file_path is str.
-            2) The encryptor object is not empty (i.e: there is data to write to a file).
-            3) The path given is an absolute path.
-            4) The path ends with the '.bin' extension.
+            2) The path given is an absolute path.
+            3) The path ends with the '.bin' extension.
         If any of these requirements are not met, the function will raise an appropriate exception.
         :param file_path: The path parameter which will be validated.
         :raises ValueError: If the given path isn't an absolute path.
-        :raises DataNotLoadedException: If no data is saved in the instance.
         :raises InvalidEncryptedFileExtensionException: If the file to which the data will be written to doesn't end
                                                         with the '.bin' file extension.
         """
         # Checking the type of the file_path:
         if type(file_path) != str:
             raise TypeError(f"Expected file path of type str, got {type(file_path)} instead")
-        # Checking there is data to write to a file:
-        elif self.is_empty():
-            raise DataNotLoadedException(
-                'Cannot save encrypted data to file because data was cleared or not loaded at all'
-            )
         # Checking that the file path is absolute:
         elif not os.path.isabs(file_path):
             raise ValueError(f'The function only accepts absolute paths, yet a relative path was given ({file_path})')
