@@ -76,7 +76,7 @@ class Decryptor:
         :type new_password: str
         """
         # Ensuring type safety for the password:
-        if type(new_password) != str:
+        if not isinstance(new_password, str):
             raise TypeError(f'Expected a password of type str, got {type(new_password)} instead')
         self.__password = new_password
 
@@ -105,12 +105,12 @@ class Decryptor:
             raise DataAlreadyDecryptedException("Cannot decrypt new data until the existing decrypted data is cleared")
 
         # Changing the encrypted data to bytes if it wasn't already:
-        if type(encrypted_data) != bytes:
+        if not isinstance(encrypted_data, bytes):
             encrypted_data = bytes(encrypted_data)
 
         # Extract salt, IV, and ciphertext from the encrypted data
         salt = encrypted_data[:keys.SALT_SIZE]
-        iv = encrypted_data[keys.SALT_SIZE : keys.SALT_SIZE + Encryptor.IV_SIZE]
+        iv = encrypted_data[keys.SALT_SIZE: keys.SALT_SIZE + Encryptor.IV_SIZE]
         cipher_data = encrypted_data[keys.SALT_SIZE + Encryptor.IV_SIZE:]
 
         # Deriving the key from the password and salt:
@@ -171,7 +171,7 @@ class Decryptor:
         :rtype: Decryptor
         """
         # Check the path:
-        if type(path) != str:
+        if not isinstance(path, str):
             raise TypeError(f"Expected path of type str, got {type(path)} instead")
         if not os.path.isabs(path):
             raise ValueError(f'The function only accepts absolute paths, yet a relative path was given ({path})')
