@@ -98,9 +98,6 @@ class Encryptor:
     # The amount of bytes that will be dedicated to the initialization vector during the encryption:
     IV_SIZE = 16
 
-    # The amount of bytes that will be dedicated to the salt:
-    SALT_SIZE = 32
-
     def __init__(self, key: Key, max_encryption_size: int = MINIMUM_ENCRYPTION_SIZE) -> 'Encryptor':
         """
         The constructor of the Encryptor class.
