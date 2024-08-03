@@ -2,6 +2,7 @@ import os
 import typer
 from typing import Optional
 from collections import namedtuple
+from typing_extensions import Annotated
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -14,6 +15,7 @@ Key = namedtuple("Key", ["bytes", "password", "salt"])
 
 # The salt size used in Key generation (in bytes):
 SALT_SIZE = 32
+
 
 def derive_key(password: str, salt: Optional[bytes] = None, key_length: int = 32, iterations: int = 10_000) -> Key:
     """
@@ -39,3 +41,49 @@ def derive_key(password: str, salt: Optional[bytes] = None, key_length: int = 32
     # Derive the encryption key from the provided password and salt (encoding with utf-8):
     key_bytes = kdf.derive(password.encode())
     return Key(key_bytes, password, salt)
+
+
+@keys_app.command("create")
+def create_key(
+        key_name: Annotated[str, typer.Argument(case_sensitive=False, help="The name of the key. Not case-sensitive")],
+        key_length: Annotated[Optional[int], typer.Option(min=8, help="The length of the key in bytes")] = None,
+        iterations: Annotated[Optional[int], typer.Option(min=1, help="Number of iteration to create the encryption key (a larger number is more secure but slower)")] = None,
+        override: Annotated[bool, typer.Option(help="Override an existing key if one is found")] = False
+):
+    """
+    Creates a new key in the program's database. The name of the key is not case-sensitive.
+    """
+    # TODO: Create key in database
+    pass
+
+
+@keys_app.command("delete")
+def delete_key(
+        key_name: Annotated[str, typer.Argument(case_sensitive=False, help="The name of the key. Not case sensitive")]
+):
+    """
+    Deletes a key from the program's database. The name of the key is not case-sensitive.
+    """
+    # TODO: Delete key from the database
+    pass
+
+
+@keys_app.command()
+def delete_all():
+    """
+    Deletes all keys from the program's database.
+    """
+    # TODO: Delete all keys and prompt
+    pass
+
+
+@keys_app.command("show")
+def show_key(
+    key_name: Annotated[Optional[str], typer.Argument(help="Name of the key to show. If not given, all keys will be shown")] = None,
+    verbose: Annotated[bool, typer.Option(help="Show the key's full information")] = False
+):
+    """
+    Show a specific key saved in the program, or all of them if one is not specified.
+    """
+    # TODO: Show a specific key/all keys using rich
+    pass
