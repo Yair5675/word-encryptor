@@ -4,6 +4,7 @@ import sqlite3
 from typing import Optional
 from collections import namedtuple
 from contextlib import contextmanager
+from rich.prompt import Confirm, Prompt
 from typing_extensions import Annotated
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
@@ -17,6 +18,9 @@ Key = namedtuple("Key", ["bytes", "password", "salt"])
 
 # The salt size used in Key generation (in bytes):
 SALT_SIZE = 32
+
+# Path to the keys' database:
+KEYS_DB_PATH = "keys.db"
 
 
 def derive_key(password: str, salt: Optional[bytes] = None, key_length: int = 32, iterations: int = 10_000) -> Key:
@@ -69,16 +73,43 @@ def database(db_path: str) -> tuple[sqlite3.Connection, sqlite3.Cursor]:
 
 @keys_app.command("create")
 def create_key(
-        key_name: Annotated[str, typer.Argument(case_sensitive=False, help="The name of the key. Not case-sensitive")],
-        key_length: Annotated[Optional[int], typer.Option(min=8, help="The length of the key in bytes")] = None,
-        iterations: Annotated[Optional[int], typer.Option(min=1, help="Number of iteration to create the encryption key (a larger number is more secure but slower)")] = None,
+        key_name: Annotated[str, typer.Argument(case_sensitive=False, help="The name of the key. Not case-sensitive", show_default=False)],
+        key_length: Annotated[int, typer.Option(min=8, clamp=True, help="The length of the key in bytes", show_default=False)] = 32,
+        iterations: Annotated[int, typer.Option(min=1, clamp=True, help="Number of iteration to create the encryption key (a larger number is more secure but slower)", show_default=False)] = 10_000,
         override: Annotated[bool, typer.Option(help="Override an existing key if one is found")] = False
 ):
     """
     Creates a new key in the program's database. The name of the key is not case-sensitive.
     """
-    # TODO: Create key in database
-    pass
+    connection: sqlite3.Connection
+    cursor: sqlite3.Cursor
+    with database(KEYS_DB_PATH) as (connection, cursor):
+        # Convert the key name to lowercase:
+        key_name = key_name.lower()
+
+        # Search for it in the database (skip if override is true):
+        if not override:
+            cursor.execute("SELECT COUNT(*) FROM keys WHERE name = ?;", (key_name,))
+
+            # If it already exists, prompt the user to confirm the override:
+            if cursor.fetchone()[0] > 0:
+                override = Confirm.ask("A similar key was found. Do you want to override it?")
+                if not override:
+                    raise typer.Abort()
+
+        # Ask for password:
+        password = Prompt.ask("Enter key password: ", password=True)
+
+        # Derive the key:
+        key = derive_key(password, key_length=key_length, iterations=iterations)
+
+        # Save in the database:
+        cursor.execute(
+            'INSERT OR REPLACE INTO keys (name, key, password, salt) VALUES (?, ?, ?, ?);',
+            (key_name, key.bytes, key.password, key.salt)
+        )
+        connection.commit()
+        print("Key Created!")
 
 
 @keys_app.command("delete")

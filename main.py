@@ -1,9 +1,13 @@
 import typer
+from keys import keys_app
 
 # Creating the app:
 app = typer.Typer(
     no_args_is_help=True,  # Activate help screen if no command is specified
 )
+
+# Add the keys' app:
+app.add_typer(keys_app, name='keys', no_args_is_help=True)
 
 # TODO:
 #  1) Encrypt text (straight from terminal) with an option to save to a file.
