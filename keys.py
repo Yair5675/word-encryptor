@@ -175,7 +175,7 @@ def show_key(
     verbose: Annotated[bool, typer.Option(help="Show the key's full information")] = False
 ):
     """
-    Show a specific key saved in the program, or all of them if one is not specified.
+    Shows a specific key saved in the program, or all of them if one is not specified.
     """
     # Check if we need to show all keys or just one:
     show_all = key_name is None
@@ -208,8 +208,8 @@ def show_key(
     # Add to table:
     for key in keys_data:
         if verbose:
-            # Order is name, password, salt, bytes
-            keys_table.add_row(key[0], key[1], str(key[2]), str(key[3]))
+            # Order is name, password, salt, bytes (show salt and bytes with shorter hex code):
+            keys_table.add_row(key[0], key[1], key[2].hex(), key[3].hex())
         else:
             keys_table.add_row(key[0])
     rich_print(keys_table)
