@@ -1,9 +1,9 @@
 import os
+from keys import Key
 from typing import Union
 from collections import deque
-from cryptography.hazmat.primitives import hashes, padding
+from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 
@@ -73,10 +73,8 @@ class Encryptor:
     # Instance attributes:
     ######################
     __slots__ = [
-        '__key',  # The key which will primarily decide how the data will be encrypted. It is based on the password given
-                  # inside the constructor.
-
-        '__salt',  # A random collection of bytes to improve the security of the encryption.
+        '__key',  # The key which will primarily decide how the data will be encrypted. Will contain the salt and
+                  # password used in its creation as well
 
         '__raw_data',  # A deque where each element is a collection of non-encrypted bytes that the user fed the instance.
                        # The size of each element will be limited in a way that the size of the encryption of the bytes in
@@ -103,17 +101,11 @@ class Encryptor:
     # The amount of bytes that will be dedicated to the salt:
     SALT_SIZE = 32
 
-    # The amount of bytes the key will be made of (multiply by 8 to get the amount of bits):
-    __KEY_LENGTH = 32
-
-    # Number of iteration to create the encryption key (higher is more secure but slower):
-    __KEY_ITERATIONS = 100000
-
-    def __init__(self, password: str, max_encryption_size: int = MINIMUM_ENCRYPTION_SIZE):
+    def __init__(self, key: Key, max_encryption_size: int = MINIMUM_ENCRYPTION_SIZE) -> 'Encryptor':
         """
         The constructor of the Encryptor class.
-        :param password: A piece of string that will be used to make a specialized key for the encryption method.
-        :type password: str
+        :param key: The key object used for the encryption.
+        :type key: Key
         :param max_encryption_size: An upper bound to the size of the encrypted data, measured in bytes, used to prevent
                                     overly large encryption data and excessive memory usage. This value must be above or
                                     equal to the class attribute MINIMUM_ENCRYPTION_SIZE (the default size), but can be
@@ -121,9 +113,9 @@ class Encryptor:
         :type max_encryption_size: int
         :rtype: Encryptor
         """
-        # Ensuring type safety for the password:
-        if type(password) != str:
-            raise TypeError(f'Expected a password of type str, got {type(password)} instead')
+        # Ensuring type safety for the key:
+        if not isinstance(key, Key):
+            raise TypeError(f'Expected a key of type Key, got {type(key)} instead')
 
         # Ensuring type safety for the max encryption size:
         if type(max_encryption_size) != int:
@@ -136,10 +128,8 @@ class Encryptor:
         # Calculating the max chunk size:
         self.__max_chunk_size: int = Encryptor.__calc_raw_data_size(max_encryption_size)
 
-        # Generate random salt bytes for the encryption:
-        self.__salt: bytes = os.urandom(Encryptor.SALT_SIZE)
-        # Derive key:
-        self.__key: bytes = Encryptor.derive_key(password, self.__salt)
+        # Save the given key:
+        self.__key: Key = key
 
         # Initializing the encrypted data:
         self.__encrypted_data: bytes = b''
@@ -302,7 +292,7 @@ class Encryptor:
             raise DataAlreadyEncryptedException('Cannot re-encrypt data after it was encrypted')
 
         # Encrypt the first chunk of raw data:
-        self.__encrypted_data = Encryptor.__encrypt_data(self.__raw_data[0], self.__key, self.__salt)
+        self.__encrypted_data = Encryptor.__encrypt_data(self.__raw_data[0], self.__key.bytes, self.__key.salt)
 
         # Returning the current Encryptor instance to support the builder pattern:
         return self
@@ -349,7 +339,7 @@ class Encryptor:
         raw_data = b''.join(self.__raw_data) if all_chunks else self.__raw_data[0]
 
         # Encrypt the data:
-        encrypted_data = Encryptor.__encrypt_data(raw_data, self.__key, self.__salt)
+        encrypted_data = Encryptor.__encrypt_data(raw_data, self.__key.bytes, self.__key.salt)
 
         # Save to file:
         with open(file_path, 'wb') as file:
@@ -419,25 +409,3 @@ class Encryptor:
         safety_margin = 64
         # Through experiments, the correlation between raw len and encrypted len is: encrypted = raw + 64.
         return encrypted_data_size - 64 - safety_margin
-
-    @staticmethod
-    def derive_key(password: str, salt: bytes) -> bytes:
-        """
-        Creates an encryption key based on the given password and salt parameters.
-        :param password: A password chosen by the encryptor, will be used to determine the value of the encryption key.
-        :type password: str
-        :param salt: A random collection of bytes that will be added to the creation of the key to make it more secure.
-        :type salt: bytes
-        :return: The encryption key that was generated with the password and salt parameters.
-        :rtype: bytes
-        """
-        # Create a key derivation function (PBKDF2) with SHA-256 as the hash function:
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
-            length=Encryptor.__KEY_LENGTH,  # Length of the key in bytes
-            salt=salt,
-            iterations=Encryptor.__KEY_ITERATIONS,  # Number of iterations (higher is more secure but slower)
-            backend=default_backend()
-        )
-        # Derive the encryption key from the provided password and salt
-        return kdf.derive(password.encode('utf-8'))

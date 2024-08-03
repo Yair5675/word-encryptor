@@ -1,4 +1,5 @@
 import os
+import keys
 from typing import Union
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
@@ -113,7 +114,7 @@ class Decryptor:
         cipher_data = encrypted_data[Encryptor.SALT_SIZE + Encryptor.IV_SIZE:]
 
         # Deriving the key from the password and salt:
-        key = Encryptor.derive_key(self.__password, salt)
+        key = keys.derive_key(self.__password, salt)
 
         # Creating a Cipher object using AES in CFB mode with the key and IV:
         cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=default_backend())
