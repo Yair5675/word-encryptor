@@ -2,7 +2,9 @@ import os
 import typer
 import sqlite3
 from typing import Optional
+from rich.table import Table
 from collections import namedtuple
+from rich import print as rich_print
 from contextlib import contextmanager
 from rich.prompt import Confirm, Prompt
 from typing_extensions import Annotated
@@ -59,7 +61,7 @@ def database(db_path: str) -> tuple[sqlite3.Connection, sqlite3.Cursor]:
         # Initialize keys table if one wasn't created already:
         connection.execute('''
             CREATE TABLE IF NOT EXISTS keys 
-            (name TEXT PRIMARY KEY NOT NULL, key BLOB NOT NULL, password TEXT NOT NULL, salt BLOB NOT NULL);
+            (name TEXT PRIMARY KEY NOT NULL, bytes BLOB NOT NULL, password TEXT NOT NULL, salt BLOB NOT NULL);
         ''')
         connection.commit()
 
@@ -105,11 +107,11 @@ def create_key(
 
         # Save in the database:
         cursor.execute(
-            'INSERT OR REPLACE INTO keys (name, key, password, salt) VALUES (?, ?, ?, ?);',
+            'INSERT OR REPLACE INTO keys (name, bytes, password, salt) VALUES (?, ?, ?, ?);',
             (key_name, key.bytes, key.password, key.salt)
         )
         connection.commit()
-        print("Key Created!")
+        rich_print("[bright_green]Key Created![/bright_green]")
 
 
 @keys_app.command("delete")
@@ -140,5 +142,39 @@ def show_key(
     """
     Show a specific key saved in the program, or all of them if one is not specified.
     """
-    # TODO: Show a specific key/all keys using rich
-    pass
+    # Check if we need to show all keys or just one:
+    show_all = key_name is None
+
+    # Create a table based on the verbose:
+    if verbose:
+        keys_table = Table("Key Name", "Password", "Salt", "Bytes")
+    else:
+        keys_table = Table("Key Name")
+
+    connection: sqlite3.Connection
+    cursor: sqlite3.Cursor
+    with database(KEYS_DB_PATH) as (connection, cursor):
+        # Get keys data and add them to the table:
+        details_to_get = 'name, password, salt, bytes' if verbose else 'name'
+        if show_all:
+            cursor.execute(f'SELECT {details_to_get} FROM keys;')
+        else:
+            cursor.execute(f'SELECT {details_to_get} FROM keys WHERE name = ?', (key_name.lower(),))
+        keys_data = cursor.fetchall()
+
+        # Check that keys are stored:
+        if len(keys_data) == 0:
+            if show_all:
+                rich_print("[red]No keys were found in the database.[/red]")
+            else:
+                rich_print(f"[red]The key '{key_name.lower()}' was not found in the database.[/red]")
+            raise typer.Exit()
+
+    # Add to table:
+    for key in keys_data:
+        if verbose:
+            # Order is name, password, salt, bytes
+            keys_table.add_row(key[0], key[1], str(key[2]), str(key[3]))
+        else:
+            keys_table.add_row(key[0])
+    rich_print(keys_table)
