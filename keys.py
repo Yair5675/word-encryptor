@@ -1,7 +1,9 @@
 import os
 import typer
+import sqlite3
 from typing import Optional
 from collections import namedtuple
+from contextlib import contextmanager
 from typing_extensions import Annotated
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
@@ -41,6 +43,28 @@ def derive_key(password: str, salt: Optional[bytes] = None, key_length: int = 32
     # Derive the encryption key from the provided password and salt (encoding with utf-8):
     key_bytes = kdf.derive(password.encode())
     return Key(key_bytes, password, salt)
+
+
+@contextmanager
+def database(db_path: str) -> tuple[sqlite3.Connection, sqlite3.Cursor]:
+    # Create connection and cursor:
+    connection = sqlite3.connect(db_path)
+    cursor = connection.cursor()
+
+    try:
+        # Initialize keys table if one wasn't created already:
+        connection.execute('''
+            CREATE TABLE IF NOT EXISTS keys 
+            (name TEXT PRIMARY KEY NOT NULL, key BLOB NOT NULL, password TEXT NOT NULL, salt BLOB NOT NULL);
+        ''')
+        connection.commit()
+
+        # Return the connection and cursor:
+        yield connection, cursor
+    finally:
+        # Close connection and cursor:
+        cursor.close()
+        connection.close()
 
 
 @keys_app.command("create")
