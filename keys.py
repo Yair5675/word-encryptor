@@ -16,7 +16,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 keys_app = typer.Typer()
 
 # A key datatype that will save all necessary information:
-Key = namedtuple("Key", ["bytes", "password", "salt"])
+Key = namedtuple("Key", ["name", "bytes", "password", "salt"])
 
 # The salt size used in Key generation (in bytes):
 SALT_SIZE = 32
@@ -25,10 +25,11 @@ SALT_SIZE = 32
 KEYS_DB_PATH = "keys.db"
 
 
-def derive_key(password: str, salt: Optional[bytes] = None, key_length: int = 32, iterations: int = 10_000) -> Key:
+def derive_key(password: str, key_name: Optional[str] = None, salt: Optional[bytes] = None, key_length: int = 32, iterations: int = 10_000) -> Key:
     """
     Creates an encryption key based on the given password and salt parameters.
     :param password: A password chosen by the encryptor, will be used to determine the value of the encryption key.
+    :param key_name: An optional name to the key. If not specified, the name will be an empty string.
     :param salt: A random collection of bytes that will be added to the creation of the key to make it more secure. If not given, the salt will be generated randomly.
     :param key_length: The length of the key in bytes, default is 32.
     :param iterations: Number of iteration to create the encryption key (a larger number is more secure but slower). Default is 10_000.
@@ -48,7 +49,7 @@ def derive_key(password: str, salt: Optional[bytes] = None, key_length: int = 32
     )
     # Derive the encryption key from the provided password and salt (encoding with utf-8):
     key_bytes = kdf.derive(password.encode())
-    return Key(key_bytes, password, salt)
+    return Key("" if key_name is None else key_name, key_bytes, password, salt)
 
 
 @contextmanager
@@ -100,7 +101,7 @@ def create_key(
                     raise typer.Abort()
 
         # Ask for password:
-        password = Prompt.ask("Enter key password: ", password=True)
+        password = Prompt.ask("Enter key password", password=True)
 
         # Derive the key:
         key = derive_key(password, key_length=key_length, iterations=iterations)
