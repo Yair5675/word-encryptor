@@ -87,7 +87,7 @@ def get_key(key_name: str) -> Optional[Key]:
 
         # Check if the key was found:
         if len(key_data) > 0:
-            return Key(*key_data[0])
+            return Key(*key_data)
     return None
 
 
@@ -186,47 +186,64 @@ def delete_all():
             raise typer.Abort()
 
 
+def show_all_keys():
+    # Create the table:
+    keys_table = Table("Key Name")
+
+    # Get all the keys from the database:
+    with database(KEYS_DB_PATH) as (connection, cursor):
+        cursor.execute('SELECT name FROM keys;')
+        keys_names: list[tuple[str]] = cursor.fetchall()
+
+        # Make sure there are keys
+        if len(keys_names) == 0:
+            rich_print("[red]No keys were found in the database.[/red]")
+            raise typer.Exit()
+
+    # Enter key names to table:
+    for key_name in keys_names:
+        keys_table.add_row(key_name[0])
+
+    # Print Table:
+    rich_print(keys_table)
+
+
 @keys_app.command("show")
 def show_key(
-    key_name: Annotated[Optional[str], typer.Argument(help="Name of the key to show. If not given, all keys will be shown")] = None,
-    verbose: Annotated[bool, typer.Option(help="Show the key's full information")] = False
+    key_name: Annotated[Optional[str], typer.Argument(
+        help="""Name of the key to show. Pay attention that if a specific key was selected, the user will have to \
+provide the key's password as well (since sensitive information about the key will be shown). If not specified, only \
+the keys' names will be shown.""",
+        show_default=False
+    )] = None,
 ):
     """
     Shows a specific key saved in the program, or all of them if one is not specified.
+
     """
     # Check if we need to show all keys or just one:
     show_all = key_name is None
+    if show_all:
+        show_all_keys()
+        raise typer.Exit()
 
-    # Create a table based on the verbose:
-    if verbose:
-        keys_table = Table("Key Name", "Password", "Salt", "Bytes")
-    else:
-        keys_table = Table("Key Name")
+    # Get the key:
+    key = get_key(key_name)
 
-    connection: sqlite3.Connection
-    cursor: sqlite3.Cursor
-    with database(KEYS_DB_PATH) as (connection, cursor):
-        # Get keys data and add them to the table:
-        details_to_get = 'name, password, salt, bytes' if verbose else 'name'
-        if show_all:
-            cursor.execute(f'SELECT {details_to_get} FROM keys;')
-        else:
-            cursor.execute(f'SELECT {details_to_get} FROM keys WHERE name = ?', (key_name.lower(),))
-        keys_data = cursor.fetchall()
+    # If the key was not found:
+    if key is None:
+        rich_print(f"[red]The key '{key_name.lower()}' was not found in the database.[/red]")
+        raise typer.Exit()
 
-        # Check that keys are stored:
-        if len(keys_data) == 0:
-            if show_all:
-                rich_print("[red]No keys were found in the database.[/red]")
-            else:
-                rich_print(f"[red]The key '{key_name.lower()}' was not found in the database.[/red]")
-            raise typer.Exit()
+    # Confirm they know the password:
+    user_password = Prompt.ask("Please write the key's password", password=True)
+    if user_password != key.password:
+        rich_print("[bold red]Wrong password[/bold red]")
+        raise typer.Abort()
 
-    # Add to table:
-    for key in keys_data:
-        if verbose:
-            # Order is name, password, salt, bytes (show salt and bytes with shorter hex code):
-            keys_table.add_row(key[0], key[1], key[2].hex(), key[3].hex())
-        else:
-            keys_table.add_row(key[0])
+    rich_print("[bright_green]Correct![/bright_green]")
+
+    # Create the table and print it:
+    keys_table = Table("Key Name", "Password", "Salt", "Bytes")
+    keys_table.add_row(key.name, key.password, key.salt.hex(), key.bytes.hex())
     rich_print(keys_table)
