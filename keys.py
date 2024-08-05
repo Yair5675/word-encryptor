@@ -74,6 +74,23 @@ def database(db_path: str) -> tuple[sqlite3.Connection, sqlite3.Cursor]:
         connection.close()
 
 
+def get_key(key_name: str) -> Optional[Key]:
+    """
+    Tries to fetch a key from the database, if one exists.
+    :param key_name: The name of the key that will be fetched. Not case-sensitive.
+    :return: A Key object representing the key in the database if one is found, None otherwise.
+    """
+    with database(KEYS_DB_PATH) as (connection, cursor):
+        # Fetch the data:
+        cursor.execute('SELECT name, bytes, password, salt FROM keys WHERE name = ?', (key_name.lower(),))
+        key_data = cursor.fetchone()
+
+        # Check if the key was found:
+        if len(key_data) > 0:
+            return Key(*key_data[0])
+    return None
+
+
 @keys_app.command("create")
 def create_key(
         key_name: Annotated[str, typer.Argument(case_sensitive=False, help="The name of the key. Not case-sensitive", show_default=False)],
@@ -126,9 +143,8 @@ def delete_key(
     cursor: sqlite3.Cursor
     with database(KEYS_DB_PATH) as (connection, cursor):
         # Search for the key in the database:
-        cursor.execute("SELECT COUNT(*) FROM keys WHERE name = ?", (key_name.lower(),))
-
-        if cursor.fetchone()[0] == 0:
+        key = get_key(key_name)
+        if key is None:
             rich_print(f"[red]The key '{key_name.lower()}' was not found in the database.[/red]")
             raise typer.Exit()
 
