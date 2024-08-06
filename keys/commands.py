@@ -1,8 +1,9 @@
 import typer
 import sqlite3
+from keys import derive_key
 from typing import Optional
 from rich.table import Table
-from keys import Key, derive_key
+from keys.database import get_key
 from rich import print as rich_print
 from contextlib import contextmanager
 from rich.prompt import Confirm, Prompt
@@ -35,23 +36,6 @@ def database(db_path: str) -> tuple[sqlite3.Connection, sqlite3.Cursor]:
         # Close connection and cursor:
         cursor.close()
         connection.close()
-
-
-def get_key(key_name: str) -> Optional[Key]:
-    """
-    Tries to fetch a key from the database, if one exists.
-    :param key_name: The name of the key that will be fetched. Not case-sensitive.
-    :return: A Key object representing the key in the database if one is found, None otherwise.
-    """
-    with database(KEYS_DB_PATH) as (connection, cursor):
-        # Fetch the data:
-        cursor.execute('SELECT name, bytes, password, salt FROM keys WHERE name = ?', (key_name.lower(),))
-        key_data = cursor.fetchone()
-
-        # Check if the key was found:
-        if len(key_data) > 0:
-            return Key(*key_data)
-    return None
 
 
 @keys_app.command("create")
