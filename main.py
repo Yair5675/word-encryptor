@@ -1,5 +1,5 @@
 import typer
-from keys import keys_app
+from keys.commands import keys_app
 
 # Creating the app:
 app = typer.Typer(
