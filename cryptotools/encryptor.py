@@ -1,5 +1,5 @@
 import os
-from keys.keys import Key
+from keys.commands import Key
 from typing import Union
 from collections import deque
 from cryptography.hazmat.primitives import padding
