@@ -57,7 +57,7 @@ def add_key(key_name: str, key_password: str, key_length: int, iterations: int) 
                        secure but slower).
     """
     # Derive a new key:
-    key = keys.derive_key(key_password, key_name, key_length=key_length, iterations=iterations)
+    key = keys.derive_key(key_password, key_name.lower(), key_length=key_length, iterations=iterations)
 
     # Save the key to the database:
     with keys_database() as (connection, cursor):
