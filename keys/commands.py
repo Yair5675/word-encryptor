@@ -71,25 +71,23 @@ def delete_key(
     """
     Deletes a key from the program's database. The name of the key is not case-sensitive.
     """
-    connection: sqlite3.Connection
-    cursor: sqlite3.Cursor
-    with database(KEYS_DB_PATH) as (connection, cursor):
-        # Search for the key in the database:
-        key = keys_database.get_key(key_name)
-        if key is None:
-            rich_print(f"[red]The key '{key_name.lower()}' was not found in the database.[/red]")
-            raise typer.Exit()
+    # Search for the key in the database:
+    key = keys_database.get_key(key_name)
+    if key is None:
+        rich_print(f"[red]The key '{key_name.lower()}' was not found in the database.[/red]")
+        raise typer.Exit()
 
-        # Confirm that the user wants to do it:
-        confirm = Confirm.ask("Are you sure you want to delete this key? [bold bright_red]This action is irreversible![/bold bright_red]")
+    # Confirm that the user wants to do it:
+    confirm = Confirm.ask(
+        "Are you sure you want to delete this key? [bold bright_red]This action is irreversible![/bold bright_red]"
+    )
 
-        if confirm:
-            # Delete the key:
-            cursor.execute("DELETE FROM keys WHERE name = ?", (key_name.lower(),))
-            connection.commit()
-            rich_print("[bright_green]Successfully deleted key[/bright_green]")
-        else:
-            raise typer.Abort()
+    if confirm:
+        # Delete the key:
+        keys_database.remove_key(key_name)
+        rich_print("[bright_green]Successfully deleted key[/bright_green]")
+    else:
+        raise typer.Abort()
 
 
 @keys_app.command()

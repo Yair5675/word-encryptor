@@ -66,3 +66,13 @@ def add_key(key_name: str, key_password: str, key_length: int, iterations: int) 
             (key.name, key.bytes, key.password, key.salt)
         )
         connection.commit()
+
+
+def remove_key(key_name: str) -> None:
+    """
+    Removes a key from the database based on the key's name.
+    :param key_name: The name of the key that will be removed from the database, not case-sensitive.
+    """
+    with keys_database() as (connection, cursor):
+        cursor.execute("DELETE FROM keys WHERE name = ?;", (key_name.lower(),))
+        connection.commit()
