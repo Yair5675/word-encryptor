@@ -22,7 +22,7 @@ Key = namedtuple("Key", ["name", "bytes", "password", "salt"])
 SALT_SIZE = 32
 
 # Path to the keys' database:
-KEYS_DB_PATH = "keys.db"
+KEYS_DB_PATH = "../keys.db"
 
 
 def derive_key(password: str, key_name: Optional[str] = None, salt: Optional[bytes] = None, key_length: int = 32, iterations: int = 10_000) -> Key:

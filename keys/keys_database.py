@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 
 # Path to the keys' database:
-KEYS_DB_PATH = "keys.db"
+KEYS_DB_PATH = "../keys.db"
 
 
 @contextmanager

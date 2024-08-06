@@ -1,5 +1,5 @@
 import os
-import keys
+from keys import keys
 from typing import Union
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
