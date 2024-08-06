@@ -1,11 +1,10 @@
 import typer
 import sqlite3
-from keys import derive_key
 from typing import Optional
 from rich.table import Table
-from keys.database import get_key
 from rich import print as rich_print
 from contextlib import contextmanager
+import keys.database as keys_database
 from rich.prompt import Confirm, Prompt
 from typing_extensions import Annotated
 
@@ -48,35 +47,21 @@ def create_key(
     """
     Creates a new key in the program's database. The name of the key is not case-sensitive.
     """
-    connection: sqlite3.Connection
-    cursor: sqlite3.Cursor
-    with database(KEYS_DB_PATH) as (connection, cursor):
-        # Convert the key name to lowercase:
-        key_name = key_name.lower()
+    # Check if there is a key with a similar name:
+    if not override:
+        similar_key = keys_database.get_key(key_name)
+        if similar_key is not None:
+            override = Confirm.ask("A similar key was found. Do you want to override it?")
+            if not override:
+                raise typer.Abort()
 
-        # Search for it in the database (skip if override is true):
-        if not override:
-            cursor.execute("SELECT COUNT(*) FROM keys WHERE name = ?;", (key_name,))
+    # Ask for password:
+    password = Prompt.ask("Enter key password", password=True)
 
-            # If it already exists, prompt the user to confirm the override:
-            if cursor.fetchone()[0] > 0:
-                override = Confirm.ask("A similar key was found. Do you want to override it?")
-                if not override:
-                    raise typer.Abort()
+    # Create the key and add it to the database:
+    keys_database.add_key(key_name, password, key_length, iterations)
 
-        # Ask for password:
-        password = Prompt.ask("Enter key password", password=True)
-
-        # Derive the key:
-        key = derive_key(password, key_length=key_length, iterations=iterations)
-
-        # Save in the database:
-        cursor.execute(
-            'INSERT OR REPLACE INTO keys (name, bytes, password, salt) VALUES (?, ?, ?, ?);',
-            (key_name, key.bytes, key.password, key.salt)
-        )
-        connection.commit()
-        rich_print("[bright_green]Key Created![/bright_green]")
+    rich_print("[bright_green]Key Created![/bright_green]")
 
 
 @keys_app.command("delete")
@@ -90,7 +75,7 @@ def delete_key(
     cursor: sqlite3.Cursor
     with database(KEYS_DB_PATH) as (connection, cursor):
         # Search for the key in the database:
-        key = get_key(key_name)
+        key = keys_database.get_key(key_name)
         if key is None:
             rich_print(f"[red]The key '{key_name.lower()}' was not found in the database.[/red]")
             raise typer.Exit()
@@ -175,7 +160,7 @@ the keys' names will be shown.""",
         raise typer.Exit()
 
     # Get the key:
-    key = get_key(key_name)
+    key = keys_database.get_key(key_name)
 
     # If the key was not found:
     if key is None:
