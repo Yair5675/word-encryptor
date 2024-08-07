@@ -1,3 +1,4 @@
+import keys
 import typer
 import sqlite3
 from typing import Optional
@@ -35,6 +36,20 @@ def database(db_path: str) -> tuple[sqlite3.Connection, sqlite3.Cursor]:
         # Close connection and cursor:
         cursor.close()
         connection.close()
+
+
+def validate_key_password(key: keys.Key) -> None:
+    """
+    A simple function that asks the user for a key's password to make sure they are the owner of that
+    key.
+    :param key: The key whose password is requested.
+    :raises typer.Abort: If the user provides a wrong password.
+    """
+    user_password = Prompt.ask("Please write the key's password", password=True)
+    if user_password != key.password:
+        rich_print("[bold red]Wrong password[/bold red]")
+        raise typer.Abort()
+    rich_print("[bright_green]Correct![/bright_green]")
 
 
 @keys_app.command("create")
@@ -166,12 +181,7 @@ the keys' names will be shown.""",
         raise typer.Exit()
 
     # Confirm they know the password:
-    user_password = Prompt.ask("Please write the key's password", password=True)
-    if user_password != key.password:
-        rich_print("[bold red]Wrong password[/bold red]")
-        raise typer.Abort()
-
-    rich_print("[bright_green]Correct![/bright_green]")
+    validate_key_password(key)
 
     # Create the table and print it:
     keys_table = Table("Key Name", "Password", "Salt", "Bytes")
