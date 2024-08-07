@@ -108,32 +108,6 @@ def delete_key(
         raise typer.Abort()
 
 
-@keys_app.command()
-def delete_all():
-    """
-    Deletes all keys from the program's database.
-    """
-    connection: sqlite3.Connection
-    cursor: sqlite3.Cursor
-    with database(KEYS_DB_PATH) as (connection, cursor):
-        # Make sure there are keys in the database:
-        cursor.execute('SELECT COUNT(*) FROM keys')
-        if cursor.fetchone()[0] == 0:
-            rich_print("[red]No keys were found in the database.[/red]")
-            raise typer.Exit()
-
-        # Ask the user if they're sure:
-        confirm = Confirm.ask("Are you sure you want to delete EVERY key? [bold bright_red]This action is irreversible![/bold bright_red]")
-
-        if confirm:
-            # Delete all keys:
-            cursor.execute("DELETE FROM keys")
-            connection.commit()
-            rich_print("[bright_green]Successfully deleted every key[/bright_green]")
-        else:
-            raise typer.Abort()
-
-
 def show_all_keys():
     # Create the table:
     keys_table = Table("Key Name")
