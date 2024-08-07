@@ -92,6 +92,9 @@ def delete_key(
         rich_print(f"[red]The key '{key_name.lower()}' was not found in the database.[/red]")
         raise typer.Exit()
 
+    # Check that the owner of the key is deleting it:
+    validate_key_password(key)
+
     # Confirm that the user wants to do it:
     confirm = Confirm.ask(
         "Are you sure you want to delete this key? [bold bright_red]This action is irreversible![/bold bright_red]"
