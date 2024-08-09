@@ -83,13 +83,45 @@ class KeyLength(Enum):
             {KeyLength.LONG.name} - {KeyLength.LONG.bytes()} bytes.
             {KeyLength.HUGE.name} - {KeyLength.HUGE.bytes()} bytes.
             """
-    
+
+
+class IterationsCount(Enum):
+    """
+    An enum whose purpose is to present iterations count options when creating a key
+    """
+    FAST = "FAST"  # 1_000
+    BALANCED = "BALANCED"  # 10_000
+    SECURE = "SECURE"  # 100_000
+    PARANOID = "PARANOID"  # 1_000_000
+
+    def iterations_num(self) -> int:
+        if self == IterationsCount.FAST:
+            return 1_000
+        elif self == IterationsCount.BALANCED:
+            return 10_000
+        elif self == IterationsCount.SECURE:
+            return 100_000
+        elif self == IterationsCount.PARANOID:
+            return 1_000_000
+        else:
+            return 0
+
+    @staticmethod
+    def help_msg():
+        return f"""
+                Number of iteration to create the encryption key (a larger number is more secure but slower).
+                {IterationsCount.FAST.name} - {IterationsCount.FAST.iterations_num():,} iterations.
+                {IterationsCount.BALANCED.name} - {IterationsCount.BALANCED.iterations_num():,} iterations.
+                {IterationsCount.SECURE.name} - {IterationsCount.SECURE.iterations_num():,} iterations.
+                {IterationsCount.PARANOID.name} - {IterationsCount.PARANOID.iterations_num():,} iterations.
+                """
+
 
 @keys_app.command("create")
 def create_key(
         key_name: Annotated[str, typer.Argument(case_sensitive=False, help="The name of the key. Not case-sensitive", show_default=False)],
         key_length: Annotated[KeyLength, typer.Option(case_sensitive=False, help=KeyLength.help_msg())] = KeyLength.LONG,
-        iterations: Annotated[int, typer.Option(min=1, clamp=True, help="Number of iteration to create the encryption key (a larger number is more secure but slower)", show_default=False)] = 10_000,
+        iterations: Annotated[IterationsCount, typer.Option(case_sensitive=False, help=IterationsCount.help_msg())] = IterationsCount.BALANCED,
         override: Annotated[bool, typer.Option(help="Override an existing key if one is found")] = False
 ):
     """
@@ -107,7 +139,7 @@ def create_key(
     password = Prompt.ask("Enter key password", password=True)
 
     # Create the key and add it to the database:
-    keys_database.add_key(key_name, password, key_length.bytes(), iterations)
+    keys_database.add_key(key_name, password, key_length.bytes(), iterations.iterations_num())
 
     rich_print("[bright_green]Key Created![/bright_green]")
 
