@@ -1,6 +1,7 @@
 import keys
 import typer
 import sqlite3
+from enum import Enum
 from typing import Optional
 from rich.table import Table
 from rich import print as rich_print
@@ -52,10 +53,42 @@ def validate_key_password(key: keys.Key) -> None:
     rich_print("[bright_green]Correct![/bright_green]")
 
 
+class KeyLength(Enum):
+    """
+    An enum whose purpose is to present key length options when creating a key
+    """
+    SHORT = "SHORT"  # 16 bytes, 128 bits
+    MEDIUM = "MEDIUM"  # 24 bytes, 192 bits
+    LONG = "LONG"  # 32 bytes, 256 bits
+    HUGE = "HUGE"  # 64 bytes, 512 bits
+
+    def bytes(self) -> int:
+        if self == KeyLength.SHORT:
+            return 16
+        elif self == KeyLength.MEDIUM:
+            return 24
+        elif self == KeyLength.LONG:
+            return 32
+        elif self == KeyLength.HUGE:
+            return 64
+        else:
+            return 0
+
+    @staticmethod
+    def help_msg():
+        return f"""
+            The length of the encryption key, in bytes.
+            {KeyLength.SHORT.name} - {KeyLength.SHORT.bytes()} bytes.
+            {KeyLength.MEDIUM.name} - {KeyLength.MEDIUM.bytes()} bytes.
+            {KeyLength.LONG.name} - {KeyLength.LONG.bytes()} bytes.
+            {KeyLength.HUGE.name} - {KeyLength.HUGE.bytes()} bytes.
+            """
+    
+
 @keys_app.command("create")
 def create_key(
         key_name: Annotated[str, typer.Argument(case_sensitive=False, help="The name of the key. Not case-sensitive", show_default=False)],
-        key_length: Annotated[int, typer.Option(min=8, clamp=True, help="The length of the key in bytes", show_default=False)] = 32,
+        key_length: Annotated[KeyLength, typer.Option(case_sensitive=False, help=KeyLength.help_msg())] = KeyLength.LONG,
         iterations: Annotated[int, typer.Option(min=1, clamp=True, help="Number of iteration to create the encryption key (a larger number is more secure but slower)", show_default=False)] = 10_000,
         override: Annotated[bool, typer.Option(help="Override an existing key if one is found")] = False
 ):
@@ -74,7 +107,7 @@ def create_key(
     password = Prompt.ask("Enter key password", password=True)
 
     # Create the key and add it to the database:
-    keys_database.add_key(key_name, password, key_length, iterations)
+    keys_database.add_key(key_name, password, key_length.bytes(), iterations)
 
     rich_print("[bright_green]Key Created![/bright_green]")
 
